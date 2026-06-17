@@ -13,6 +13,7 @@ interface UseApplicationsResult {
   save: (date: EventDate) => Promise<void>;
   isSaving: boolean;
   hasPendingChanges: (date: EventDate) => boolean;
+  resetPendingChanges: () => void;
 }
 
 export function useApplications(zone: Zone): UseApplicationsResult {
@@ -26,7 +27,9 @@ export function useApplications(zone: Zone): UseApplicationsResult {
     setIsLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/applications?zone=${encodeURIComponent(zone)}`);
+      const res = await fetch(`/api/applications?zone=${encodeURIComponent(zone)}`, {
+        credentials: "include",
+      });
       if (!res.ok) throw new Error("Failed to load applications");
       const data = await res.json();
       setApplications(data.applications);
@@ -67,6 +70,10 @@ export function useApplications(zone: Zone): UseApplicationsResult {
     [pendingChanges]
   );
 
+  const resetPendingChanges = useCallback(() => {
+    setPendingChanges({});
+  }, []);
+
   const save = useCallback(
     async (date: EventDate) => {
       setIsSaving(true);
@@ -87,9 +94,13 @@ export function useApplications(zone: Zone): UseApplicationsResult {
         const res = await fetch("/api/applications", {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify({ zone, date, names }),
         });
-        if (!res.ok) throw new Error("Failed to save applications");
+        if (!res.ok) {
+          if (res.status === 401) throw new Error("저장 권한이 없습니다. 관리자 로그인이 필요합니다.");
+          throw new Error("Failed to save applications");
+        }
 
         setApplications((prev) => {
           const others = prev.filter((a) => a.date !== date);
@@ -125,5 +136,6 @@ export function useApplications(zone: Zone): UseApplicationsResult {
     save,
     isSaving,
     hasPendingChanges,
+    resetPendingChanges,
   };
 }

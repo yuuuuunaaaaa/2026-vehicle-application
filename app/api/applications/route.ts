@@ -4,6 +4,7 @@ import {
   toggleApplication,
   setApplicationsForZoneDate,
 } from "@/services/applicationService";
+import { isAuthenticated } from "@/lib/auth";
 import type { Zone } from "@/types/member";
 import type { EventDate } from "@/types/application";
 
@@ -28,6 +29,10 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  if (!(await isAuthenticated())) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const body = await request.json();
     const { zone, name, date } = body as {
@@ -55,6 +60,10 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
+  if (!(await isAuthenticated())) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const body = await request.json();
     const { zone, date, names } = body as {

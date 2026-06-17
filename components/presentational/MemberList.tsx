@@ -9,6 +9,7 @@ export interface MemberListProps {
   isApplied: (name: string, date: EventDate) => boolean;
   onToggle: (name: string, date: EventDate) => void;
   disabled?: boolean;
+  readOnly?: boolean;
 }
 
 export function MemberList({
@@ -17,12 +18,15 @@ export function MemberList({
   isApplied,
   onToggle,
   disabled = false,
+  readOnly = false,
 }: MemberListProps) {
   return (
     <>
       <p className="text-center text-body-md text-on-surface-variant flex items-center justify-center gap-1">
-        <span className="material-symbols-outlined" style={{ fontSize: 18 }}>touch_app</span>
-        성명을 누르면 즉시 저장됩니다
+        <span className="material-symbols-outlined" style={{ fontSize: 18 }}>
+          {readOnly ? "visibility" : "touch_app"}
+        </span>
+        {readOnly ? "조회 전용입니다. 수정은 관리자만 가능합니다." : "성명을 눌러 신청 여부를 변경하세요"}
       </p>
       <div className="grid gap-2 grid-cols-3 sm:grid-cols-4 lg:grid-cols-5">
         {members.map((member) => {
@@ -31,9 +35,11 @@ export function MemberList({
             <button
               key={member.name}
               type="button"
-              disabled={disabled}
+              disabled={disabled || readOnly}
               onClick={() => onToggle(member.name, selectedDate)}
               className={`relative flex items-center justify-center rounded-xl border shadow-sm transition-all duration-200 h-14 px-2 active:scale-95 disabled:opacity-60 ${
+                readOnly ? "cursor-default" : ""
+              } ${
                 applied
                   ? "border-primary border-[3px] bg-primary-fixed"
                   : "border-outline-variant bg-surface-container-lowest"
