@@ -6,6 +6,8 @@ interface LoginModalProps {
   isOpen: boolean;
   onClose: () => void;
   onLogin: (username: string, password: string) => Promise<string | null>;
+  onLoginSuccess?: () => void;
+  onLogoutSuccess?: () => void;
   isAuthenticated: boolean;
   onLogout: () => Promise<void>;
 }
@@ -14,11 +16,14 @@ export function LoginModal({
   isOpen,
   onClose,
   onLogin,
+  onLoginSuccess,
   isAuthenticated,
   onLogout,
+  onLogoutSuccess,
 }: LoginModalProps) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -36,7 +41,9 @@ export function LoginModal({
     }
     setUsername("");
     setPassword("");
+    setShowPassword(false);
     onClose();
+    onLoginSuccess?.();
   };
 
   const handleLogout = async () => {
@@ -45,7 +52,9 @@ export function LoginModal({
     setIsSubmitting(false);
     setUsername("");
     setPassword("");
+    setShowPassword(false);
     onClose();
+    onLogoutSuccess?.();
   };
 
   return (
@@ -95,14 +104,26 @@ export function LoginModal({
                 autoComplete="username"
                 className="w-full h-12 px-4 rounded-xl border border-outline-variant bg-surface-container-lowest text-on-surface text-body-md"
               />
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="비밀번호"
-                autoComplete="current-password"
-                className="w-full h-12 px-4 rounded-xl border border-outline-variant bg-surface-container-lowest text-on-surface text-body-md"
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="비밀번호"
+                  autoComplete="current-password"
+                  className="w-full h-12 px-4 pr-12 rounded-xl border border-outline-variant bg-surface-container-lowest text-on-surface text-body-md"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  aria-label={showPassword ? "비밀번호 숨기기" : "비밀번호 보기"}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full text-on-surface-variant hover:text-on-surface transition-colors"
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: 20 }}>
+                    {showPassword ? "visibility_off" : "visibility"}
+                  </span>
+                </button>
+              </div>
 
               {error && (
                 <p role="alert" className="text-error text-body-sm">
