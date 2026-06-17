@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import type { Zone } from "@/types/member";
 import type { EventDate } from "@/types/application";
 import { EVENT_DATES } from "@/types/application";
@@ -11,6 +12,7 @@ import { TopAppBar } from "@/components/ui/TopAppBar";
 import { DateSelector } from "@/components/presentational/DateSelector";
 import { MemberList } from "@/components/presentational/MemberList";
 import { ConfirmSaveModal } from "@/components/ui/ConfirmSaveModal";
+import { UnsavedChangesModal } from "@/components/ui/UnsavedChangesModal";
 import { BottomNavBar } from "@/components/ui/BottomNavBar";
 import { DATE_LABELS, DATE_DAY_LABELS } from "@/types/application";
 
@@ -18,7 +20,12 @@ interface ZoneApplicationContainerProps {
   zone: Zone;
 }
 
+type LeaveAction =
+  | { type: "date"; date: EventDate }
+  | { type: "navigate"; href: string };
+
 export function ZoneApplicationContainer({ zone }: ZoneApplicationContainerProps) {
+  const router = useRouter();
   const [selectedDate, setSelectedDate] = useState<EventDate>(() => {
     if (typeof window !== "undefined") {
       const stored = sessionStorage.getItem(`zone-date:${zone}`);
@@ -28,13 +35,11 @@ export function ZoneApplicationContainer({ zone }: ZoneApplicationContainerProps
     }
     return EVENT_DATES[0];
   });
-  const [showModal, setShowModal] = useState(false);
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [showLeaveModal, setShowLeaveModal] = useState(false);
+  const [pendingLeaveAction, setPendingLeaveAction] = useState<LeaveAction | null>(null);
   const { isAuthenticated, isLoading: authLoading } = useAuth();
 
-  const handleDateSelect = (date: EventDate) => {
-    setSelectedDate(date);
-    sessionStorage.setItem(`zone-date:${zone}`, date);
-  };
   const { members, isLoading: membersLoading, error: membersError } = useMembers(zone);
   const {
     isLoading: appsLoading,
@@ -45,14 +50,79 @@ export function ZoneApplicationContainer({ zone }: ZoneApplicationContainerProps
     isSaving,
     hasPendingChanges,
     resetPendingChanges,
+    discardPendingChangesForDate,
   } = useApplications(zone);
 
   useEffect(() => {
     if (!isAuthenticated && !authLoading) {
       resetPendingChanges();
-      setShowModal(false);
     }
   }, [isAuthenticated, authLoading, resetPendingChanges]);
+
+  const isDirty = hasPendingChanges(selectedDate);
+  const canEdit = isAuthenticated && !authLoading;
+  const appliedNames = members.filter((m) => isApplied(m.name, selectedDate)).map((m) => m.name);
+  const appliedCount = appliedNames.length;
+  const dateLabel = `${DATE_LABELS[selectedDate]} ${DATE_DAY_LABELS[selectedDate]}`;
+
+  const executeLeaveAction = useCallback(
+    (action: LeaveAction) => {
+      discardPendingChangesForDate(selectedDate);
+
+      if (action.type === "date") {
+        setSelectedDate(action.date);
+        sessionStorage.setItem(`zone-date:${zone}`, action.date);
+      } else {
+        router.push(action.href);
+      }
+    },
+    [discardPendingChangesForDate, router, selectedDate, zone]
+  );
+
+  const attemptLeave = useCallback(
+    (action: LeaveAction) => {
+      if (canEdit && isDirty) {
+        setPendingLeaveAction(action);
+        setShowLeaveModal(true);
+        return;
+      }
+      executeLeaveAction(action);
+    },
+    [canEdit, executeLeaveAction, isDirty]
+  );
+
+  const handleDateSelect = (date: EventDate) => {
+    if (date === selectedDate) return;
+    attemptLeave({ type: "date", date });
+  };
+
+  const handleBack = () => attemptLeave({ type: "navigate", href: "/" });
+  const handleNavigate = (href: string) => attemptLeave({ type: "navigate", href });
+
+  const handleLeaveConfirm = () => {
+    if (!pendingLeaveAction) return;
+    const action = pendingLeaveAction;
+    setShowLeaveModal(false);
+    setPendingLeaveAction(null);
+    executeLeaveAction(action);
+  };
+
+  const handleLeaveCancel = () => {
+    setShowLeaveModal(false);
+    setPendingLeaveAction(null);
+  };
+
+  useEffect(() => {
+    if (!canEdit || !isDirty) return;
+
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [canEdit, isDirty]);
 
   if (membersError || appsError) {
     return (
@@ -62,26 +132,23 @@ export function ZoneApplicationContainer({ zone }: ZoneApplicationContainerProps
     );
   }
 
-  const isDirty = hasPendingChanges(selectedDate);
-  const canEdit = isAuthenticated && !authLoading;
-  const appliedNames = members.filter((m) => isApplied(m.name, selectedDate)).map((m) => m.name);
-  const appliedCount = appliedNames.length;
-  const dateLabel = `${DATE_LABELS[selectedDate]} ${DATE_DAY_LABELS[selectedDate]}`;
-
-  const handleSaveClick = () => setShowModal(true);
+  const handleSaveClick = () => setShowSaveModal(true);
   const handleConfirm = async () => {
     await save(selectedDate);
-    setShowModal(false);
+    setShowSaveModal(false);
   };
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
-      <TopAppBar title={`${zone} 차량 신청`} backHref="/" titleColor="on-surface" />
+      <TopAppBar
+        title={`${zone} 차량 신청`}
+        onBackClick={handleBack}
+        titleColor="on-surface"
+      />
 
       <main className="flex-grow pt-20 pb-32 px-container-padding space-y-6 max-w-2xl mx-auto w-full">
         <DateSelector selectedDate={selectedDate} onSelect={handleDateSelect} />
 
-        {/* Status bar */}
         <div className="bg-primary-container text-white rounded-xl px-5 h-14 flex items-center justify-between shadow-md">
           <div className="flex items-center gap-2 min-w-0">
             <span className="material-symbols-outlined shrink-0">groups</span>
@@ -90,11 +157,6 @@ export function ZoneApplicationContainer({ zone }: ZoneApplicationContainerProps
           {canEdit && isDirty && (
             <span className="shrink-0 bg-white/30 px-2 py-1 rounded-full text-xs font-bold ml-2">
               미저장
-            </span>
-          )}
-          {(!canEdit || !isDirty) && (
-            <span className="shrink-0 bg-white/20 px-2 py-1 rounded-full text-xs font-bold ml-2">
-              LIVE
             </span>
           )}
         </div>
@@ -141,17 +203,23 @@ export function ZoneApplicationContainer({ zone }: ZoneApplicationContainerProps
         </footer>
       )}
 
-      <BottomNavBar activeTab="apply" />
+      <BottomNavBar activeTab="apply" onNavigate={handleNavigate} />
       {canEdit && (
         <ConfirmSaveModal
-          isOpen={showModal}
+          isOpen={showSaveModal}
           dateLabel={dateLabel}
           appliedNames={appliedNames}
           onConfirm={handleConfirm}
-          onCancel={() => setShowModal(false)}
+          onCancel={() => setShowSaveModal(false)}
           isLoading={isSaving}
         />
       )}
+      <UnsavedChangesModal
+        isOpen={showLeaveModal && canEdit}
+        dateLabel={dateLabel}
+        onStay={handleLeaveCancel}
+        onLeave={handleLeaveConfirm}
+      />
     </div>
   );
 }

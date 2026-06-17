@@ -14,6 +14,7 @@ interface UseApplicationsResult {
   isSaving: boolean;
   hasPendingChanges: (date: EventDate) => boolean;
   resetPendingChanges: () => void;
+  discardPendingChangesForDate: (date: EventDate) => void;
 }
 
 export function useApplications(zone: Zone): UseApplicationsResult {
@@ -72,6 +73,15 @@ export function useApplications(zone: Zone): UseApplicationsResult {
 
   const resetPendingChanges = useCallback(() => {
     setPendingChanges({});
+  }, []);
+
+  const discardPendingChangesForDate = useCallback((date: EventDate) => {
+    setPendingChanges((prev) => {
+      if (!prev[date]) return prev;
+      const next = { ...prev };
+      delete next[date];
+      return next;
+    });
   }, []);
 
   const save = useCallback(
@@ -137,5 +147,6 @@ export function useApplications(zone: Zone): UseApplicationsResult {
     isSaving,
     hasPendingChanges,
     resetPendingChanges,
+    discardPendingChangesForDate,
   };
 }

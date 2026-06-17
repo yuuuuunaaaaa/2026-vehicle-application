@@ -39,6 +39,10 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  --color-warning: #b45309;
+  --color-on-warning: #ffffff;
+  --color-warning-container: #ffedd5;
+  --color-on-warning-container: #7c2d12;
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -136,6 +140,10 @@
   --color-on-tertiary-fixed-variant: #3c475a;
   --color-error: #ba1a1a;
   --color-on-error: #ffffff;
+  --color-warning: #b45309;
+  --color-on-warning: #ffffff;
+  --color-warning-container: #ffedd5;
+  --color-on-warning-container: #7c2d12;
   --color-background: #f7f9fb;
   --color-on-background: #191c1e;
   --color-surface: #f7f9fb;
@@ -174,6 +182,10 @@
   .pb-safe          { padding-bottom: env(safe-area-inset-bottom, 0px); }
   .hide-scrollbar::-webkit-scrollbar { display: none; }
   .hide-scrollbar   { -ms-overflow-style: none; scrollbar-width: none; }
+  .bg-warning                { background-color: #b45309; }
+  .text-on-warning           { color: #ffffff; }
+  .bg-warning-container      { background-color: #ffedd5; }
+  .text-on-warning-container { color: #7c2d12; }
 }
 
 /* Material Symbols */

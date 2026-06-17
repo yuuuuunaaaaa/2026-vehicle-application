@@ -27,7 +27,6 @@ export function DateDetailContainer({ date }: DateDetailContainerProps) {
           <div className="bg-primary p-6 rounded-xl shadow-lg text-white">
             <div className="flex justify-between items-center mb-4">
               <span className="text-label-lg opacity-80">전체 신청 인원</span>
-              <span className="bg-white/20 px-3 py-1 rounded-full text-xs font-bold">LIVE</span>
             </div>
             <div className="flex items-baseline gap-1">
               <span className="text-4xl font-bold">
@@ -50,18 +49,6 @@ export function DateDetailContainer({ date }: DateDetailContainerProps) {
         ) : (
           <DateDetail summary={summary} />
         )}
-
-        {/* Action guide */}
-        <div className="mt-stack-gap-md p-6 border-2 border-dashed border-outline-variant rounded-2xl flex flex-col items-center text-center">
-          <div className="w-12 h-12 bg-surface-container-high rounded-full flex items-center justify-center mb-3">
-            <span className="material-symbols-outlined text-outline">info</span>
-          </div>
-          <p className="text-body-md text-on-surface-variant">
-            구역을 클릭하여 각 명단을 확인할 수 있습니다.
-            <br />
-            추가 신청은 하단 메뉴의 <strong>신청하기</strong>를 이용해 주세요.
-          </p>
-        </div>
       </main>
 
       <BottomNavBar activeTab="status" />
