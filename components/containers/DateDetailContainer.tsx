@@ -21,7 +21,7 @@ export function DateDetailContainer({ date }: DateDetailContainerProps) {
     <div className="flex flex-col min-h-screen bg-background">
       <TopAppBar title={`${label} 상세 현황`} backHref="/summary" />
 
-      <main className="flex-grow pt-20 pb-28 px-container-padding">
+      <main className="flex-grow pt-20 pb-28 px-container-padding max-w-2xl mx-auto w-full">
         {/* Summary hero card */}
         <section className="my-stack-gap-md">
           <div className="bg-primary p-6 rounded-xl shadow-lg text-white">

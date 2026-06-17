@@ -8,7 +8,7 @@ export default function HomePage() {
     <div className="flex flex-col min-h-screen bg-background">
       <TopAppBar title="차량 신청 관리" titleSize="headline-lg" />
 
-      <main className="flex-grow pt-20 pb-28 px-container-padding max-w-md mx-auto w-full">
+      <main className="flex-grow pt-20 pb-28 px-container-padding max-w-2xl mx-auto w-full">
         <section className="mt-stack-gap-md mb-stack-gap-md">
           <h2 className="text-display-lg text-on-surface mb-1">차량 신청 현황</h2>
           <p className="text-body-lg text-on-surface-variant">담당 구역을 선택해 주세요.</p>

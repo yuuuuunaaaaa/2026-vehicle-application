@@ -71,6 +71,22 @@ export async function toggleApplication(key: ApplicationKey): Promise<{
   return { action };
 }
 
+export async function setApplicationsForZoneDate(
+  zone: Zone,
+  date: EventDate,
+  names: string[]
+): Promise<void> {
+  const all = await fetchAllApplications();
+  const others = all.filter((a) => !(a.zone === zone && a.date === date));
+  const newApps: Application[] = names.map((name) => ({
+    zone,
+    name,
+    date,
+    updated_at: new Date().toISOString(),
+  }));
+  await clearAndWriteRows(RANGE, serializeApplications([...others, ...newApps]));
+}
+
 export async function getDateSummary(): Promise<DateSummary[]> {
   const all = await fetchAllApplications();
   return EVENT_DATES.map((date) => ({

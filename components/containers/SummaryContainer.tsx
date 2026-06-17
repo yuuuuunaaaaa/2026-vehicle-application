@@ -12,7 +12,7 @@ export function SummaryContainer() {
     <div className="flex flex-col min-h-screen bg-background">
       <TopAppBar title="전체 신청 집계" backHref="/" />
 
-      <main className="flex-grow pt-20 pb-28 px-container-padding">
+      <main className="flex-grow pt-20 pb-28 px-container-padding max-w-2xl mx-auto w-full">
         <section className="mb-stack-gap-md mt-stack-gap-md">
           <h2 className="text-headline-lg text-on-surface mb-2">총 신청 현황</h2>
           <p className="text-body-md text-on-surface-variant">

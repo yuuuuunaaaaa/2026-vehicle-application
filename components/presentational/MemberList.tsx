@@ -8,7 +8,7 @@ export interface MemberListProps {
   selectedDate: EventDate;
   isApplied: (name: string, date: EventDate) => boolean;
   onToggle: (name: string, date: EventDate) => void;
-  isToggling: boolean;
+  disabled?: boolean;
 }
 
 export function MemberList({
@@ -16,7 +16,7 @@ export function MemberList({
   selectedDate,
   isApplied,
   onToggle,
-  isToggling,
+  disabled = false,
 }: MemberListProps) {
   return (
     <>
@@ -24,26 +24,26 @@ export function MemberList({
         <span className="material-symbols-outlined" style={{ fontSize: 18 }}>touch_app</span>
         성명을 누르면 즉시 저장됩니다
       </p>
-      <div className="grid gap-2 grid-cols-3">
+      <div className="grid gap-2 grid-cols-3 sm:grid-cols-4 lg:grid-cols-5">
         {members.map((member) => {
           const applied = isApplied(member.name, selectedDate);
           return (
             <button
               key={member.name}
               type="button"
-              disabled={isToggling}
+              disabled={disabled}
               onClick={() => onToggle(member.name, selectedDate)}
-              className={`flex items-center justify-between rounded-xl border shadow-sm transition-all duration-200 h-14 px-2 active:scale-95 disabled:opacity-60 ${
+              className={`relative flex items-center justify-center rounded-xl border shadow-sm transition-all duration-200 h-14 px-2 active:scale-95 disabled:opacity-60 ${
                 applied
                   ? "border-primary border-[3px] bg-primary-fixed"
                   : "border-outline-variant bg-surface-container-lowest"
               }`}
             >
-              <span className="text-on-surface text-[14px] font-bold truncate">{member.name}</span>
+              <span className="text-on-surface text-[14px] font-bold text-center">{member.name}</span>
               {applied && (
                 <span
-                  className="material-symbols-outlined text-primary shrink-0"
-                  style={{ fontSize: 22, fontVariationSettings: "'FILL' 1" }}
+                  className="absolute right-1.5 material-symbols-outlined text-primary"
+                  style={{ fontSize: 18, fontVariationSettings: "'FILL' 1" }}
                 >
                   check_circle
                 </span>

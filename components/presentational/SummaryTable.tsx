@@ -17,7 +17,7 @@ export function SummaryTable({ summary }: SummaryTableProps) {
           href={`/summary/${date}`}
           className="w-full text-left bg-surface-container-lowest border border-outline-variant rounded-xl p-card-inner-padding flex items-center justify-between min-h-touch-target-optimal shadow-[0px_4px_12px_rgba(0,0,0,0.05)] hover:bg-surface-container transition-colors active:scale-[0.98] duration-200"
         >
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1 min-w-0">
             <span className="text-body-lg text-on-surface">
               {DATE_LABELS[date]} {DATE_DAY_LABELS[date]}
             </span>
