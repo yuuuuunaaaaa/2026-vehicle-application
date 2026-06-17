@@ -1,15 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { Zone } from "@/types/member";
 import type { EventDate } from "@/types/application";
 import { EVENT_DATES } from "@/types/application";
 import { useMembers } from "@/hooks/useMembers";
 import { useApplications } from "@/hooks/useApplications";
+import { useAuth } from "@/hooks/useAuth";
 import { TopAppBar } from "@/components/ui/TopAppBar";
 import { DateSelector } from "@/components/presentational/DateSelector";
 import { MemberList } from "@/components/presentational/MemberList";
 import { ConfirmSaveModal } from "@/components/ui/ConfirmSaveModal";
+import { BottomNavBar } from "@/components/ui/BottomNavBar";
 import { DATE_LABELS, DATE_DAY_LABELS } from "@/types/application";
 
 interface ZoneApplicationContainerProps {
@@ -27,6 +29,7 @@ export function ZoneApplicationContainer({ zone }: ZoneApplicationContainerProps
     return EVENT_DATES[0];
   });
   const [showModal, setShowModal] = useState(false);
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
 
   const handleDateSelect = (date: EventDate) => {
     setSelectedDate(date);
@@ -41,7 +44,15 @@ export function ZoneApplicationContainer({ zone }: ZoneApplicationContainerProps
     save,
     isSaving,
     hasPendingChanges,
+    resetPendingChanges,
   } = useApplications(zone);
+
+  useEffect(() => {
+    if (!isAuthenticated && !authLoading) {
+      resetPendingChanges();
+      setShowModal(false);
+    }
+  }, [isAuthenticated, authLoading, resetPendingChanges]);
 
   if (membersError || appsError) {
     return (
@@ -52,6 +63,7 @@ export function ZoneApplicationContainer({ zone }: ZoneApplicationContainerProps
   }
 
   const isDirty = hasPendingChanges(selectedDate);
+  const canEdit = isAuthenticated && !authLoading;
   const appliedNames = members.filter((m) => isApplied(m.name, selectedDate)).map((m) => m.name);
   const appliedCount = appliedNames.length;
   const dateLabel = `${DATE_LABELS[selectedDate]} ${DATE_DAY_LABELS[selectedDate]}`;
@@ -75,12 +87,12 @@ export function ZoneApplicationContainer({ zone }: ZoneApplicationContainerProps
             <span className="material-symbols-outlined shrink-0">groups</span>
             <span className="text-body-lg font-bold truncate">신청 인원: {appliedCount}명</span>
           </div>
-          {isDirty && (
+          {canEdit && isDirty && (
             <span className="shrink-0 bg-white/30 px-2 py-1 rounded-full text-xs font-bold ml-2">
               미저장
             </span>
           )}
-          {!isDirty && (
+          {(!canEdit || !isDirty) && (
             <span className="shrink-0 bg-white/20 px-2 py-1 rounded-full text-xs font-bold ml-2">
               LIVE
             </span>
@@ -98,42 +110,48 @@ export function ZoneApplicationContainer({ zone }: ZoneApplicationContainerProps
             isApplied={isApplied}
             onToggle={pendingToggle}
             disabled={isSaving}
+            readOnly={!canEdit}
           />
         )}
       </main>
 
-      {/* Save button */}
-      <footer className="fixed bottom-0 left-0 w-full p-4 bg-gradient-to-t from-background via-background/90 to-transparent pointer-events-none">
-        <div className="max-w-2xl mx-auto pointer-events-auto">
-          <button
-            type="button"
-            onClick={handleSaveClick}
-            disabled={isSaving || !isDirty}
-            className={`w-full h-16 rounded-full flex items-center justify-center text-white shadow-lg transition-all duration-200 ${
-              isDirty
-                ? "bg-primary active:scale-[0.98]"
-                : "bg-outline-variant"
-            } ${isSaving ? "animate-pulse" : ""}`}
-          >
-            <div className="flex items-center gap-3">
-              <span className="material-symbols-outlined">
-                {isSaving ? "sync" : isDirty ? "save" : "cloud_done"}
-              </span>
-              <span className="text-button-text">
-                {isSaving ? "저장 중..." : isDirty ? "저장하기" : "저장 완료"}
-              </span>
-            </div>
-          </button>
-        </div>
-      </footer>
-      <ConfirmSaveModal
-        isOpen={showModal}
-        dateLabel={dateLabel}
-        appliedNames={appliedNames}
-        onConfirm={handleConfirm}
-        onCancel={() => setShowModal(false)}
-        isLoading={isSaving}
-      />
+      {canEdit && (
+        <footer className="fixed bottom-[calc(56px+1rem)] left-0 w-full p-4 bg-gradient-to-t from-background via-background/90 to-transparent pointer-events-none z-40">
+          <div className="max-w-2xl mx-auto pointer-events-auto">
+            <button
+              type="button"
+              onClick={handleSaveClick}
+              disabled={isSaving || !isDirty}
+              className={`w-full h-16 rounded-full flex items-center justify-center text-white shadow-lg transition-all duration-200 ${
+                isDirty
+                  ? "bg-primary active:scale-[0.98]"
+                  : "bg-outline-variant"
+              } ${isSaving ? "animate-pulse" : ""}`}
+            >
+              <div className="flex items-center gap-3">
+                <span className="material-symbols-outlined">
+                  {isSaving ? "sync" : isDirty ? "save" : "cloud_done"}
+                </span>
+                <span className="text-button-text">
+                  {isSaving ? "저장 중..." : isDirty ? "저장하기" : "저장 완료"}
+                </span>
+              </div>
+            </button>
+          </div>
+        </footer>
+      )}
+
+      <BottomNavBar activeTab="apply" />
+      {canEdit && (
+        <ConfirmSaveModal
+          isOpen={showModal}
+          dateLabel={dateLabel}
+          appliedNames={appliedNames}
+          onConfirm={handleConfirm}
+          onCancel={() => setShowModal(false)}
+          isLoading={isSaving}
+        />
+      )}
     </div>
   );
 }
