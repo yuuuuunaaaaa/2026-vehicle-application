@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { AdminAccessButton } from "@/components/ui/AdminAccessButton";
 import { LoginModal } from "@/components/ui/LoginModal";
+import { Toast } from "@/components/ui/Toast";
 
 interface BottomNavBarProps {
   activeTab: "apply" | "status";
@@ -12,6 +13,7 @@ interface BottomNavBarProps {
 
 export function BottomNavBar({ activeTab }: BottomNavBarProps) {
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const { isAuthenticated, login, logout } = useAuth();
 
   return (
@@ -57,9 +59,12 @@ export function BottomNavBar({ activeTab }: BottomNavBarProps) {
         isOpen={showLoginModal}
         onClose={() => setShowLoginModal(false)}
         onLogin={login}
+        onLoginSuccess={() => setSuccessMessage("로그인되었습니다.")}
+        onLogoutSuccess={() => setSuccessMessage("로그아웃되었습니다.")}
         isAuthenticated={isAuthenticated}
         onLogout={logout}
       />
+      <Toast message={successMessage} onHide={() => setSuccessMessage(null)} />
     </>
   );
 }
