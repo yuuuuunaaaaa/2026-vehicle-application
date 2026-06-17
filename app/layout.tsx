@@ -3,10 +3,10 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "교회 행사 차량 신청",
-    template: "%s | 교회 행사 차량 신청",
+    default: "2026 수양회 차량 신청",
+    template: "%s | 2026 수양회 차량 신청",
   },
-  description: "교회 행사 차량 신청 관리",
+  description: "2026 수양회 차량 신청 관리",
 };
 
 export const viewport: Viewport = {
