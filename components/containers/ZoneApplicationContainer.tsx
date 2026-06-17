@@ -26,15 +26,7 @@ type LeaveAction =
 
 export function ZoneApplicationContainer({ zone }: ZoneApplicationContainerProps) {
   const router = useRouter();
-  const [selectedDate, setSelectedDate] = useState<EventDate>(() => {
-    if (typeof window !== "undefined") {
-      const stored = sessionStorage.getItem(`zone-date:${zone}`);
-      if (stored && (EVENT_DATES as string[]).includes(stored)) {
-        return stored as EventDate;
-      }
-    }
-    return EVENT_DATES[0];
-  });
+  const [selectedDate, setSelectedDate] = useState<EventDate>(EVENT_DATES[0]);
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [pendingLeaveAction, setPendingLeaveAction] = useState<LeaveAction | null>(null);
@@ -71,12 +63,11 @@ export function ZoneApplicationContainer({ zone }: ZoneApplicationContainerProps
 
       if (action.type === "date") {
         setSelectedDate(action.date);
-        sessionStorage.setItem(`zone-date:${zone}`, action.date);
       } else {
         router.push(action.href);
       }
     },
-    [discardPendingChangesForDate, router, selectedDate, zone]
+    [discardPendingChangesForDate, router, selectedDate]
   );
 
   const attemptLeave = useCallback(
