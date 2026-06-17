@@ -92,7 +92,6 @@ export function LoginModal({
                 </div>
                 <div>
                   <h2 className="text-headline-md text-on-surface">관리자 로그인</h2>
-                  <p className="text-body-md text-on-surface-variant">수정 권한이 필요합니다.</p>
                 </div>
               </div>
 
