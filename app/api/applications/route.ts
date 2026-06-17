@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   getApplicationsByZone,
   toggleApplication,
+  setApplicationsForZoneDate,
 } from "@/services/applicationService";
 import type { Zone } from "@/types/member";
 import type { EventDate } from "@/types/application";
@@ -48,6 +49,33 @@ export async function POST(request: NextRequest) {
     console.error("[POST /api/applications]", error);
     return NextResponse.json(
       { error: "Failed to toggle application" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PUT(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { zone, date, names } = body as {
+      zone: Zone;
+      date: EventDate;
+      names: string[];
+    };
+
+    if (!zone || !date || !Array.isArray(names)) {
+      return NextResponse.json(
+        { error: "zone, date, names are required" },
+        { status: 400 }
+      );
+    }
+
+    await setApplicationsForZoneDate(zone, date, names);
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    console.error("[PUT /api/applications]", error);
+    return NextResponse.json(
+      { error: "Failed to save applications" },
       { status: 500 }
     );
   }

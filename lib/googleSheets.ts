@@ -3,7 +3,9 @@ import { google } from "googleapis";
 const SPREADSHEET_ID = process.env.GOOGLE_SHEETS_SPREADSHEET_ID!;
 
 function getAuth() {
-  const credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON!);
+  const raw = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
+  if (!raw) throw new Error("GOOGLE_SERVICE_ACCOUNT_JSON is not set in .env.local");
+  const credentials = JSON.parse(raw);
   return new google.auth.GoogleAuth({
     credentials,
     scopes: ["https://www.googleapis.com/auth/spreadsheets"],
