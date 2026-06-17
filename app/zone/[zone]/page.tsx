@@ -34,5 +34,5 @@ export default async function ZonePage({ params }: PageProps) {
   const { zone } = await params;
   const decoded = decodeZoneParam(zone) as Zone;
 
-  return <ZoneApplicationContainer zone={decoded} />;
+  return <ZoneApplicationContainer key={decoded} zone={decoded} />;
 }
