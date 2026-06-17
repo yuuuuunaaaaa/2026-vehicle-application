@@ -7,18 +7,32 @@ interface PageProps {
   params: Promise<{ zone: string }>;
 }
 
+function decodeZoneParam(value: string): string {
+  let decoded = value;
+  try {
+    let next = decodeURIComponent(decoded);
+    while (next !== decoded) {
+      decoded = next;
+      next = decodeURIComponent(decoded);
+    }
+  } catch {
+    return value;
+  }
+  return decoded;
+}
+
 export function generateStaticParams() {
-  return ZONES.map((zone) => ({ zone: encodeURIComponent(zone) }));
+  return ZONES.map((zone) => ({ zone }));
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { zone } = await params;
-  return { title: `${decodeURIComponent(zone)} 차량 신청` };
+  return { title: `${decodeZoneParam(zone)} 차량 신청` };
 }
 
 export default async function ZonePage({ params }: PageProps) {
   const { zone } = await params;
-  const decoded = decodeURIComponent(zone) as Zone;
+  const decoded = decodeZoneParam(zone) as Zone;
 
   return <ZoneApplicationContainer zone={decoded} />;
 }
