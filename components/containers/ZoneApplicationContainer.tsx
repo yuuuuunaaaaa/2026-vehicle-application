@@ -156,7 +156,7 @@ export function ZoneApplicationContainer({ zone }: ZoneApplicationContainerProps
         titleColor="on-surface"
       />
 
-      <main className="flex-grow pt-20 pb-32 px-container-padding space-y-6 max-w-2xl mx-auto w-full">
+      <main className={`flex-grow pt-20 px-container-padding space-y-6 max-w-2xl mx-auto w-full ${canEdit && !showMemberManager ? "pb-52" : "pb-28"}`}>
         <DateSelector
           selectedDate={showMemberManager ? null : selectedDate}
           onSelect={handleDateSelect}
