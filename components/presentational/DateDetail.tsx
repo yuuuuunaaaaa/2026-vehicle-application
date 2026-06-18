@@ -50,7 +50,7 @@ export function DateDetail({ summary }: DateDetailProps) {
             {isOpen && (
               <div className="px-card-inner-padding pb-5 space-y-3">
                 {members.length > 0 ? (
-                  members.map((name) => (
+                  members.map(({ name, isMinor }) => (
                     <div
                       key={name}
                       className="flex items-center gap-3 p-3 bg-surface-container-low rounded-lg"
@@ -62,6 +62,11 @@ export function DateDetail({ summary }: DateDetailProps) {
                         person
                       </span>
                       <span className="text-body-lg text-on-surface">{name}</span>
+                      {isMinor && (
+                        <span className="ml-auto text-label-sm text-on-tertiary bg-tertiary px-2 py-0.5 rounded-full">
+                          미성년자
+                        </span>
+                      )}
                     </div>
                   ))
                 ) : (
