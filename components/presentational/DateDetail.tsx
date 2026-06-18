@@ -8,9 +8,7 @@ export interface DateDetailProps {
 }
 
 export function DateDetail({ summary }: DateDetailProps) {
-  const [openZone, setOpenZone] = useState<string | null>(
-    summary.length > 0 ? summary[0].zone : null
-  );
+  const [openZone, setOpenZone] = useState<string | null>(null);
 
   const toggle = (zone: string) => {
     setOpenZone((prev) => (prev === zone ? null : zone));
