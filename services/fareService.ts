@@ -41,7 +41,14 @@ export async function getFareSummary(): Promise<FareSummary> {
     .map((date) => {
       const zoneMap = dateZoneMap.get(date)!;
       const zones: ZoneDateFare[] = Array.from(zoneMap.entries())
-        .sort(([a], [b]) => parseInt(a) - parseInt(b))
+        .sort(([a], [b]) => {
+          const ai = parseInt(a);
+          const bi = parseInt(b);
+          if (isNaN(ai) && isNaN(bi)) return a.localeCompare(b);
+          if (isNaN(ai)) return 1;
+          if (isNaN(bi)) return -1;
+          return ai - bi;
+        })
         .map(([zone, { adultCount, minorCount }]) => ({
           zone,
           adultCount,

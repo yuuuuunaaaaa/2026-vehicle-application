@@ -23,9 +23,8 @@ export function DateDetail({ summary }: DateDetailProps) {
         return (
           <div
             key={zone}
-            className={`bg-white border rounded-xl shadow-[0_4px_12px_rgba(0,0,0,0.05)] overflow-hidden transition-all duration-300 ${
-              isOpen ? "border-primary ring-2 ring-primary" : "border-outline-variant"
-            }`}
+            className={`bg-white border rounded-xl shadow-[0_4px_12px_rgba(0,0,0,0.05)] overflow-hidden transition-all duration-300 ${isOpen ? "border-primary ring-2 ring-primary" : "border-outline-variant"
+              }`}
           >
             <button
               type="button"
@@ -65,9 +64,6 @@ export function DateDetail({ summary }: DateDetailProps) {
                         person
                       </span>
                       <span className="text-body-lg text-on-surface">{name}</span>
-                      <span className="ml-auto text-xs font-bold text-primary bg-primary/10 px-2 py-1 rounded">
-                        확정
-                      </span>
                     </div>
                   ))
                 ) : (
