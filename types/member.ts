@@ -7,7 +7,8 @@ export type Zone =
   | "6구역"
   | "7구역"
   | "8구역"
-  | "9구역";
+  | "9구역"
+  | "청년회";
 
 export const ZONES: Zone[] = [
   "1구역",
@@ -19,6 +20,7 @@ export const ZONES: Zone[] = [
   "7구역",
   "8구역",
   "9구역",
+  "청년회",
 ];
 
 export interface Member {

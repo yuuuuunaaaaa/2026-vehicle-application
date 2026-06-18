@@ -159,9 +159,18 @@ export async function getZoneSummaryForDate(
     existing.push(app.name);
     zoneMap.set(app.zone, existing);
   }
-  return Array.from(zoneMap.entries()).map(([zone, members]) => ({
-    zone,
-    count: members.length,
-    members,
-  }));
+  return Array.from(zoneMap.entries())
+    .sort(([a], [b]) => {
+      const ai = parseInt(a);
+      const bi = parseInt(b);
+      if (isNaN(ai) && isNaN(bi)) return a.localeCompare(b);
+      if (isNaN(ai)) return 1;
+      if (isNaN(bi)) return -1;
+      return ai - bi;
+    })
+    .map(([zone, members]) => ({
+      zone,
+      count: members.length,
+      members,
+    }));
 }
