@@ -1,11 +1,12 @@
 import { readSheet, clearAndWriteRows } from "@/lib/googleSheets";
-import { getMembersByZone } from "@/services/memberService";
+import { getAllMembers, getMembersByZone } from "@/services/memberService";
 import { compareZones } from "@/lib/zoneSort";
 import type {
   Application,
   ApplicationKey,
   DateSummary,
   EventDate,
+  ZoneMemberSummary,
   ZoneSummaryForDate,
 } from "@/types/application";
 import { EVENT_DATES } from "@/types/application";
@@ -153,11 +154,22 @@ export async function getDateSummary(): Promise<DateSummary[]> {
 export async function getZoneSummaryForDate(
   date: EventDate
 ): Promise<ZoneSummaryForDate[]> {
-  const apps = await getApplicationsByDate(date);
-  const zoneMap = new Map<Zone, string[]>();
+  const [apps, allMembers] = await Promise.all([
+    getApplicationsByDate(date),
+    getAllMembers(),
+  ]);
+
+  const minorLookup = new Map<string, boolean>(
+    allMembers.map((m) => [`${m.zone}::${m.name}`, m.isMinor])
+  );
+
+  const zoneMap = new Map<Zone, ZoneMemberSummary[]>();
   for (const app of apps) {
     const existing = zoneMap.get(app.zone) ?? [];
-    existing.push(app.name);
+    existing.push({
+      name: app.name,
+      isMinor: minorLookup.get(`${app.zone}::${app.name}`) ?? false,
+    });
     zoneMap.set(app.zone, existing);
   }
   return Array.from(zoneMap.entries())

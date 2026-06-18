@@ -56,8 +56,13 @@ export interface DateSummary {
   count: number;
 }
 
+export interface ZoneMemberSummary {
+  name: string;
+  isMinor: boolean;
+}
+
 export interface ZoneSummaryForDate {
   zone: Zone;
   count: number;
-  members: string[];
+  members: ZoneMemberSummary[];
 }
