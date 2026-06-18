@@ -1,6 +1,7 @@
 "use client";
 
 import { useDateSummary } from "@/hooks/useSummary";
+import { useAuth } from "@/hooks/useAuth";
 import { DateDetail } from "@/components/presentational/DateDetail";
 import { TopAppBar } from "@/components/ui/TopAppBar";
 import { BottomNavBar } from "@/components/ui/BottomNavBar";
@@ -12,6 +13,7 @@ interface DateDetailContainerProps {
 }
 
 export function DateDetailContainer({ date }: DateDetailContainerProps) {
+  const { isAuthenticated: isAdmin } = useAuth();
   const { date: eventDate, summary, isLoading, error } = useDateSummary(date);
 
   const label = eventDate ? DATE_LABELS[eventDate as EventDate] : date;
@@ -47,7 +49,7 @@ export function DateDetailContainer({ date }: DateDetailContainerProps) {
             불러오는 중...
           </p>
         ) : (
-          <DateDetail summary={summary} />
+          <DateDetail summary={summary} isAdmin={isAdmin} />
         )}
       </main>
 

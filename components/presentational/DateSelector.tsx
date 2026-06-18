@@ -6,9 +6,10 @@ import { EVENT_DATES, DATE_LABELS, DATE_DAY_LABELS } from "@/types/application";
 export interface DateSelectorProps {
   selectedDate: EventDate;
   onSelect: (date: EventDate) => void;
+  endSlot?: React.ReactNode;
 }
 
-export function DateSelector({ selectedDate, onSelect }: DateSelectorProps) {
+export function DateSelector({ selectedDate, onSelect, endSlot }: DateSelectorProps) {
   return (
     <div className="space-y-3">
       <p className="text-label-lg text-on-surface-variant px-1">날짜 선택</p>
@@ -36,6 +37,7 @@ export function DateSelector({ selectedDate, onSelect }: DateSelectorProps) {
             </button>
           );
         })}
+        {endSlot}
       </div>
     </div>
   );

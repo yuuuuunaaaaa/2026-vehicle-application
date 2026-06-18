@@ -11,6 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { TopAppBar } from "@/components/ui/TopAppBar";
 import { DateSelector } from "@/components/presentational/DateSelector";
 import { MemberList } from "@/components/presentational/MemberList";
+import { ZoneMemberPanel } from "@/components/presentational/ZoneMemberPanel";
 import { ConfirmSaveModal } from "@/components/ui/ConfirmSaveModal";
 import { UnsavedChangesModal } from "@/components/ui/UnsavedChangesModal";
 import { BottomNavBar } from "@/components/ui/BottomNavBar";
@@ -22,11 +23,13 @@ interface ZoneApplicationContainerProps {
 
 type LeaveAction =
   | { type: "date"; date: EventDate }
-  | { type: "navigate"; href: string };
+  | { type: "navigate"; href: string }
+  | { type: "member-manager" };
 
 export function ZoneApplicationContainer({ zone }: ZoneApplicationContainerProps) {
   const router = useRouter();
   const [selectedDate, setSelectedDate] = useState<EventDate>(EVENT_DATES[0]);
+  const [showMemberManager, setShowMemberManager] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [pendingLeaveAction, setPendingLeaveAction] = useState<LeaveAction | null>(null);
@@ -60,11 +63,13 @@ export function ZoneApplicationContainer({ zone }: ZoneApplicationContainerProps
   const executeLeaveAction = useCallback(
     (action: LeaveAction) => {
       discardPendingChangesForDate(selectedDate);
-
       if (action.type === "date") {
         setSelectedDate(action.date);
-      } else {
+        setShowMemberManager(false);
+      } else if (action.type === "navigate") {
         router.push(action.href);
+      } else if (action.type === "member-manager") {
+        setShowMemberManager(true);
       }
     },
     [discardPendingChangesForDate, router, selectedDate]
@@ -83,8 +88,16 @@ export function ZoneApplicationContainer({ zone }: ZoneApplicationContainerProps
   );
 
   const handleDateSelect = (date: EventDate) => {
-    if (date === selectedDate) return;
+    if (!showMemberManager && date === selectedDate) return;
     attemptLeave({ type: "date", date });
+  };
+
+  const handleMemberManagerToggle = () => {
+    if (showMemberManager) {
+      setShowMemberManager(false);
+      return;
+    }
+    attemptLeave({ type: "member-manager" });
   };
 
   const handleBack = () => attemptLeave({ type: "navigate", href: "/" });
@@ -105,12 +118,10 @@ export function ZoneApplicationContainer({ zone }: ZoneApplicationContainerProps
 
   useEffect(() => {
     if (!canEdit || !isDirty) return;
-
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
       event.preventDefault();
       event.returnValue = "";
     };
-
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [canEdit, isDirty]);
@@ -138,37 +149,67 @@ export function ZoneApplicationContainer({ zone }: ZoneApplicationContainerProps
       />
 
       <main className="flex-grow pt-20 pb-32 px-container-padding space-y-6 max-w-2xl mx-auto w-full">
-        <DateSelector selectedDate={selectedDate} onSelect={handleDateSelect} />
-
-        <div className="bg-primary-container text-white rounded-xl px-5 h-14 flex items-center justify-between shadow-md">
-          <div className="flex items-center gap-2 min-w-0">
-            <span className="material-symbols-outlined shrink-0">groups</span>
-            <span className="text-body-lg font-bold truncate">신청 인원: {appliedCount}명</span>
-          </div>
-          {canEdit && isDirty && (
-            <span className="shrink-0 bg-white/30 px-2 py-1 rounded-full text-xs font-bold ml-2">
-              미저장
-            </span>
+        <DateSelector
+          selectedDate={selectedDate}
+          onSelect={handleDateSelect}
+          endSlot={canEdit && (
+            <button
+              type="button"
+              onClick={handleMemberManagerToggle}
+              className={`flex-none h-touch-target-optimal min-w-[80px] rounded-xl border flex flex-col items-center justify-center gap-1 transition-all active:scale-95 ${
+                showMemberManager
+                  ? "border-primary border-[3px] bg-primary-fixed"
+                  : "border-dashed border-outline-variant bg-surface-container-lowest"
+              }`}
+            >
+              <span
+                className={`material-symbols-outlined ${showMemberManager ? "text-primary" : "text-on-surface-variant"}`}
+                style={{ fontSize: 20 }}
+              >
+                manage_accounts
+              </span>
+              <span className={`text-[11px] font-bold ${showMemberManager ? "text-primary" : "text-on-surface-variant"}`}>
+                구성원
+              </span>
+            </button>
           )}
-        </div>
+        />
 
-        {membersLoading || appsLoading ? (
-          <p aria-live="polite" className="text-center text-on-surface-variant py-8">
-            불러오는 중...
-          </p>
+        {showMemberManager ? (
+          <ZoneMemberPanel zone={zone} />
         ) : (
-          <MemberList
-            members={members}
-            selectedDate={selectedDate}
-            isApplied={isApplied}
-            onToggle={pendingToggle}
-            disabled={isSaving}
-            readOnly={!canEdit}
-          />
+          <>
+            <div className="bg-primary-container text-white rounded-xl px-5 h-14 flex items-center justify-between shadow-md">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="material-symbols-outlined shrink-0">groups</span>
+                <span className="text-body-lg font-bold truncate">신청 인원: {appliedCount}명</span>
+              </div>
+              {canEdit && isDirty && (
+                <span className="shrink-0 bg-white/30 px-2 py-1 rounded-full text-xs font-bold ml-2">
+                  미저장
+                </span>
+              )}
+            </div>
+
+            {membersLoading || appsLoading ? (
+              <p aria-live="polite" className="text-center text-on-surface-variant py-8">
+                불러오는 중...
+              </p>
+            ) : (
+              <MemberList
+                members={members}
+                selectedDate={selectedDate}
+                isApplied={isApplied}
+                onToggle={pendingToggle}
+                disabled={isSaving}
+                readOnly={!canEdit}
+              />
+            )}
+          </>
         )}
       </main>
 
-      {canEdit && (
+      {canEdit && !showMemberManager && (
         <footer className="fixed bottom-[calc(56px+1rem)] left-0 w-full p-4 bg-gradient-to-t from-background via-background/90 to-transparent pointer-events-none z-40">
           <div className="max-w-2xl mx-auto pointer-events-auto">
             <button
@@ -176,9 +217,7 @@ export function ZoneApplicationContainer({ zone }: ZoneApplicationContainerProps
               onClick={handleSaveClick}
               disabled={isSaving || !isDirty}
               className={`w-full h-16 rounded-full flex items-center justify-center text-white shadow-lg transition-all duration-200 ${
-                isDirty
-                  ? "bg-primary active:scale-[0.98]"
-                  : "bg-outline-variant"
+                isDirty ? "bg-primary active:scale-[0.98]" : "bg-outline-variant"
               } ${isSaving ? "animate-pulse" : ""}`}
             >
               <div className="flex items-center gap-3">
@@ -195,6 +234,7 @@ export function ZoneApplicationContainer({ zone }: ZoneApplicationContainerProps
       )}
 
       <BottomNavBar activeTab="apply" onNavigate={handleNavigate} />
+
       {canEdit && (
         <ConfirmSaveModal
           isOpen={showSaveModal}

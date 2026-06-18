@@ -5,9 +5,10 @@ import type { ZoneSummaryForDate } from "@/types/application";
 
 export interface DateDetailProps {
   summary: ZoneSummaryForDate[];
+  isAdmin?: boolean;
 }
 
-export function DateDetail({ summary }: DateDetailProps) {
+export function DateDetail({ summary, isAdmin = false }: DateDetailProps) {
   const [openZone, setOpenZone] = useState<string | null>(
     summary.length > 0 ? summary[0].zone : null
   );
@@ -18,8 +19,10 @@ export function DateDetail({ summary }: DateDetailProps) {
 
   return (
     <div className="space-y-stack-gap-sm">
-      {summary.map(({ zone, count, members }) => {
+      {summary.map(({ zone, count, members, paidMembers, minorMembers }) => {
         const isOpen = openZone === zone;
+        const paidSet = new Set(paidMembers);
+        const minorSet = new Set(minorMembers);
         return (
           <div
             key={zone}
@@ -65,9 +68,25 @@ export function DateDetail({ summary }: DateDetailProps) {
                         person
                       </span>
                       <span className="text-body-lg text-on-surface">{name}</span>
-                      <span className="ml-auto text-xs font-bold text-primary bg-primary/10 px-2 py-1 rounded">
-                        확정
-                      </span>
+                      {isAdmin ? (
+                        minorSet.has(name) ? (
+                          <span className="ml-auto text-xs font-bold text-on-surface-variant bg-surface-container px-2 py-1 rounded">
+                            무료
+                          </span>
+                        ) : paidSet.has(name) ? (
+                          <span className="ml-auto text-xs font-bold text-green-700 bg-green-100 px-2 py-1 rounded">
+                            납부
+                          </span>
+                        ) : (
+                          <span className="ml-auto text-xs font-bold text-amber-700 bg-amber-100 px-2 py-1 rounded">
+                            미납
+                          </span>
+                        )
+                      ) : (
+                        <span className="ml-auto text-xs font-bold text-primary bg-primary/10 px-2 py-1 rounded">
+                          확정
+                        </span>
+                      )}
                     </div>
                   ))
                 ) : (

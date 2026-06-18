@@ -36,6 +36,8 @@ export const DATE_DAY_LABELS: Record<EventDate, string> = {
 };
 
 export interface Application {
+  idx: number;
+  memberIdx: number;
   zone: Zone;
   name: string;
   date: EventDate;
@@ -58,4 +60,6 @@ export interface ZoneSummaryForDate {
   zone: Zone;
   count: number;
   members: string[];
+  paidMembers: string[];
+  minorMembers: string[];
 }
