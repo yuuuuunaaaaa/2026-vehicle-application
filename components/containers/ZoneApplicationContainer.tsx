@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import type { Zone } from "@/types/member";
 import type { EventDate } from "@/types/application";
@@ -35,7 +35,7 @@ export function ZoneApplicationContainer({ zone }: ZoneApplicationContainerProps
   const [pendingLeaveAction, setPendingLeaveAction] = useState<LeaveAction | null>(null);
   const { isAuthenticated, isLoading: authLoading } = useAuth();
 
-  const { members, isLoading: membersLoading, error: membersError } = useMembers(zone);
+  const { members, isLoading: membersLoading, error: membersError, refresh: refreshMembers } = useMembers(zone);
   const {
     isLoading: appsLoading,
     error: appsError,
@@ -53,6 +53,14 @@ export function ZoneApplicationContainer({ zone }: ZoneApplicationContainerProps
       resetPendingChanges();
     }
   }, [isAuthenticated, authLoading, resetPendingChanges]);
+
+  const prevShowMemberManager = useRef(false);
+  useEffect(() => {
+    if (prevShowMemberManager.current && !showMemberManager) {
+      refreshMembers();
+    }
+    prevShowMemberManager.current = showMemberManager;
+  }, [showMemberManager, refreshMembers]);
 
   const isDirty = hasPendingChanges(selectedDate);
   const canEdit = isAuthenticated && !authLoading;
@@ -150,7 +158,7 @@ export function ZoneApplicationContainer({ zone }: ZoneApplicationContainerProps
 
       <main className="flex-grow pt-20 pb-32 px-container-padding space-y-6 max-w-2xl mx-auto w-full">
         <DateSelector
-          selectedDate={selectedDate}
+          selectedDate={showMemberManager ? null : selectedDate}
           onSelect={handleDateSelect}
           endSlot={canEdit && (
             <button

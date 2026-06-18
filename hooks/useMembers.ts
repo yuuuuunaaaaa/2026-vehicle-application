@@ -1,18 +1,20 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import type { Member, Zone } from "@/types/member";
 
 interface UseMembersResult {
   members: Member[];
   isLoading: boolean;
   error: string | null;
+  refresh: () => void;
 }
 
 export function useMembers(zone: Zone): UseMembersResult {
   const [members, setMembers] = useState<Member[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     setIsLoading(true);
@@ -25,7 +27,9 @@ export function useMembers(zone: Zone): UseMembersResult {
       .then((data) => setMembers(data.members))
       .catch((err) => setError(err.message))
       .finally(() => setIsLoading(false));
-  }, [zone]);
+  }, [zone, refreshKey]);
 
-  return { members, isLoading, error };
+  const refresh = useCallback(() => setRefreshKey((k) => k + 1), []);
+
+  return { members, isLoading, error, refresh };
 }

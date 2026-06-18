@@ -4,7 +4,7 @@ import type { EventDate } from "@/types/application";
 import { EVENT_DATES, DATE_LABELS, DATE_DAY_LABELS } from "@/types/application";
 
 export interface DateSelectorProps {
-  selectedDate: EventDate;
+  selectedDate: EventDate | null;
   onSelect: (date: EventDate) => void;
   endSlot?: React.ReactNode;
 }
