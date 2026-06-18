@@ -26,5 +26,4 @@ export interface Member {
   zone: Zone;
   name: string;
   isMinor: boolean;
-  paid: boolean;
 }

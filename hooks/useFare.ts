@@ -27,9 +27,7 @@ export function useFare() {
       .finally(() => {
         if (!cancelled) setIsLoading(false);
       });
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, []);
 
   return { fare, isLoading, error };

@@ -1,51 +1,60 @@
+import { getAllApplications } from "@/services/applicationService";
 import { getAllMembers } from "@/services/memberService";
-import { getApplicantCounts } from "@/services/applicationService";
+import { EVENT_DATES } from "@/types/application";
+import type { EventDate } from "@/types/application";
 import type { Zone } from "@/types/member";
-import type { FareSummary, MemberFare, ZoneFareSummary } from "@/types/fare";
+import type { DateFareSummary, FareSummary, ZoneDateFare } from "@/types/fare";
 
 const FARE_PER_ADULT = parseInt(process.env.FARE_PER_ADULT ?? "10000", 10);
 
 export async function getFareSummary(): Promise<FareSummary> {
-  const [allMembers, applicantCounts] = await Promise.all([
+  const [allApps, allMembers] = await Promise.all([
+    getAllApplications(),
     getAllMembers(),
-    getApplicantCounts(),
   ]);
 
-  const memberMap = new Map(allMembers.map((m) => [`${m.zone}:${m.name}`, m]));
+  const memberByIdx = new Map(allMembers.map((m) => [m.id, m]));
+  const memberByZoneName = new Map(allMembers.map((m) => [`${m.zone}:${m.name}`, m]));
 
-  const zoneGroups = new Map<Zone, MemberFare[]>();
-  for (const { zone, name, count } of applicantCounts) {
-    const member = memberMap.get(`${zone}:${name}`);
-    if (!member) continue;
-    // 미성년자는 무료, 성인은 신청 날짜 수 × 차비
-    const fare = member.isMinor ? 0 : count * FARE_PER_ADULT;
-    const entry: MemberFare = {
-      zone,
-      name,
-      isMinor: member.isMinor,
-      paid: member.paid,
-      applicationCount: count,
-      fare,
-    };
-    const list = zoneGroups.get(zone) ?? [];
-    list.push(entry);
-    zoneGroups.set(zone, list);
+  type Counts = { adultCount: number; minorCount: number };
+  const dateZoneMap = new Map<EventDate, Map<Zone, Counts>>();
+
+  for (const app of allApps) {
+    const member =
+      (app.memberIdx ? memberByIdx.get(app.memberIdx) : undefined) ??
+      memberByZoneName.get(`${app.zone}:${app.name}`);
+    const isMinor = member?.isMinor ?? false;
+
+    let zoneMap = dateZoneMap.get(app.date);
+    if (!zoneMap) {
+      zoneMap = new Map();
+      dateZoneMap.set(app.date, zoneMap);
+    }
+    const counts = zoneMap.get(app.zone) ?? { adultCount: 0, minorCount: 0 };
+    if (isMinor) counts.minorCount++;
+    else counts.adultCount++;
+    zoneMap.set(app.zone, counts);
   }
 
-  const zones: ZoneFareSummary[] = Array.from(zoneGroups.entries()).map(
-    ([zone, members]) => {
-      const total = members.reduce((s, m) => s + m.fare, 0);
-      const paid = members
-        .filter((m) => !m.isMinor && m.paid)
-        .reduce((s, m) => s + m.fare, 0);
-      const unpaid = total - paid;
-      return { zone, total, paid, unpaid, members };
-    }
-  );
+  const dates: DateFareSummary[] = EVENT_DATES
+    .filter((date) => dateZoneMap.has(date))
+    .map((date) => {
+      const zoneMap = dateZoneMap.get(date)!;
+      const zones: ZoneDateFare[] = Array.from(zoneMap.entries())
+        .sort(([a], [b]) => parseInt(a) - parseInt(b))
+        .map(([zone, { adultCount, minorCount }]) => ({
+          zone,
+          adultCount,
+          minorCount,
+          fare: adultCount * FARE_PER_ADULT,
+        }));
+      const totalFare = zones.reduce((s, z) => s + z.fare, 0);
+      const totalAdults = zones.reduce((s, z) => s + z.adultCount, 0);
+      const totalMinors = zones.reduce((s, z) => s + z.minorCount, 0);
+      return { date, zones, totalFare, totalAdults, totalMinors };
+    });
 
-  const totalFare = zones.reduce((s, z) => s + z.total, 0);
-  const totalPaid = zones.reduce((s, z) => s + z.paid, 0);
-  const totalUnpaid = zones.reduce((s, z) => s + z.unpaid, 0);
+  const grandTotal = dates.reduce((s, d) => s + d.totalFare, 0);
 
-  return { farePerAdult: FARE_PER_ADULT, totalFare, totalPaid, totalUnpaid, zones };
+  return { farePerAdult: FARE_PER_ADULT, dates, grandTotal };
 }

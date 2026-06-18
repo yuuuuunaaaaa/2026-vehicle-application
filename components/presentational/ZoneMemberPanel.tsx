@@ -3,21 +3,16 @@
 import { useState, useEffect, useCallback } from "react";
 import type { Member, Zone } from "@/types/member";
 import { MemberEditModal } from "@/components/ui/MemberEditModal";
-import { useAuth } from "@/hooks/useAuth";
 
 function MemberRow({
   member,
   onEdit,
   onDelete,
-  onTogglePaid,
-  showPaid,
   disabled,
 }: {
   member: Member;
   onEdit: () => void;
   onDelete: () => void;
-  onTogglePaid: () => void;
-  showPaid: boolean;
   disabled: boolean;
 }) {
   return (
@@ -29,26 +24,6 @@ function MemberRow({
         <span className="shrink-0 text-[11px] font-bold px-2 py-1 rounded-full bg-primary text-on-primary">
           미성년
         </span>
-      )}
-      {showPaid && !member.isMinor && (
-        <button
-          type="button"
-          onClick={onTogglePaid}
-          disabled={disabled}
-          aria-label={member.paid ? "납부 취소" : "납부 완료 처리"}
-          className={`shrink-0 w-11 h-11 flex items-center justify-center rounded-xl transition-colors disabled:opacity-40 active:scale-90 ${
-            member.paid
-              ? "text-green-600 hover:bg-green-50"
-              : "text-on-surface-variant hover:bg-surface-container"
-          }`}
-        >
-          <span
-            className="material-symbols-outlined"
-            style={{ fontSize: 24, fontVariationSettings: member.paid ? "'FILL' 1" : "'FILL' 0" }}
-          >
-            {member.paid ? "check_circle" : "radio_button_unchecked"}
-          </span>
-        </button>
       )}
       <button
         type="button"
@@ -77,7 +52,6 @@ interface ZoneMemberPanelProps {
 }
 
 export function ZoneMemberPanel({ zone }: ZoneMemberPanelProps) {
-  const { isAuthenticated } = useAuth();
   const [members, setMembers] = useState<Member[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -143,27 +117,6 @@ export function ZoneMemberPanel({ zone }: ZoneMemberPanelProps) {
     }
   };
 
-  const handlePaidToggle = async (id: number, currentPaid: boolean) => {
-    setIsProcessing(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/members", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ id, paid: !currentPaid }),
-      });
-      if (!res.ok) throw new Error("납부 상태 변경 실패");
-      setMembers((prev) =>
-        prev.map((m) => (m.id === id ? { ...m, paid: !currentPaid } : m))
-      );
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "오류 발생");
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
   const handleDelete = async () => {
     if (!deleteTarget) return;
     setIsProcessing(true);
@@ -206,8 +159,6 @@ export function ZoneMemberPanel({ zone }: ZoneMemberPanelProps) {
               member={m}
               onEdit={() => { setEditMode("edit"); setEditTarget(m); setShowEditModal(true); }}
               onDelete={() => setDeleteTarget(m)}
-              onTogglePaid={() => handlePaidToggle(m.id, m.paid)}
-              showPaid={isAuthenticated}
               disabled={isProcessing}
             />
           ))}

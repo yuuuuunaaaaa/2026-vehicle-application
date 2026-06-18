@@ -5,10 +5,9 @@ import type { ZoneSummaryForDate } from "@/types/application";
 
 export interface DateDetailProps {
   summary: ZoneSummaryForDate[];
-  isAdmin?: boolean;
 }
 
-export function DateDetail({ summary, isAdmin = false }: DateDetailProps) {
+export function DateDetail({ summary }: DateDetailProps) {
   const [openZone, setOpenZone] = useState<string | null>(
     summary.length > 0 ? summary[0].zone : null
   );
@@ -19,10 +18,8 @@ export function DateDetail({ summary, isAdmin = false }: DateDetailProps) {
 
   return (
     <div className="space-y-stack-gap-sm">
-      {summary.map(({ zone, count, members, paidMembers, minorMembers }) => {
+      {summary.map(({ zone, count, members }) => {
         const isOpen = openZone === zone;
-        const paidSet = new Set(paidMembers);
-        const minorSet = new Set(minorMembers);
         return (
           <div
             key={zone}
@@ -47,8 +44,8 @@ export function DateDetail({ summary, isAdmin = false }: DateDetailProps) {
                 </div>
               </div>
               <span
-                className={`material-symbols-outlined text-outline rotate-icon ${isOpen ? "rotate-180" : ""}`}
-                style={{ transition: "transform 0.3s ease" }}
+                className="material-symbols-outlined text-outline"
+                style={{ transition: "transform 0.3s ease", transform: isOpen ? "rotate(180deg)" : "rotate(0deg)" }}
               >
                 expand_more
               </span>
@@ -68,25 +65,9 @@ export function DateDetail({ summary, isAdmin = false }: DateDetailProps) {
                         person
                       </span>
                       <span className="text-body-lg text-on-surface">{name}</span>
-                      {isAdmin ? (
-                        minorSet.has(name) ? (
-                          <span className="ml-auto text-xs font-bold text-on-surface-variant bg-surface-container px-2 py-1 rounded">
-                            무료
-                          </span>
-                        ) : paidSet.has(name) ? (
-                          <span className="ml-auto text-xs font-bold text-green-700 bg-green-100 px-2 py-1 rounded">
-                            납부
-                          </span>
-                        ) : (
-                          <span className="ml-auto text-xs font-bold text-amber-700 bg-amber-100 px-2 py-1 rounded">
-                            미납
-                          </span>
-                        )
-                      ) : (
-                        <span className="ml-auto text-xs font-bold text-primary bg-primary/10 px-2 py-1 rounded">
-                          확정
-                        </span>
-                      )}
+                      <span className="ml-auto text-xs font-bold text-primary bg-primary/10 px-2 py-1 rounded">
+                        확정
+                      </span>
                     </div>
                   ))
                 ) : (

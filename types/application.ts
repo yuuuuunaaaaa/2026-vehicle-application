@@ -60,6 +60,4 @@ export interface ZoneSummaryForDate {
   zone: Zone;
   count: number;
   members: string[];
-  paidMembers: string[];
-  minorMembers: string[];
 }
