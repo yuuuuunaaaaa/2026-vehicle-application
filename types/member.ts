@@ -22,6 +22,9 @@ export const ZONES: Zone[] = [
 ];
 
 export interface Member {
+  id: number;
   zone: Zone;
   name: string;
+  isMinor: boolean;
+  paid: boolean;
 }

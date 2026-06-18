@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { AdminAccessButton } from "@/components/ui/AdminAccessButton";
@@ -8,32 +8,52 @@ import { LoginModal } from "@/components/ui/LoginModal";
 import { Toast } from "@/components/ui/Toast";
 
 interface BottomNavBarProps {
-  activeTab: "apply" | "status";
+  activeTab: "apply" | "status" | "fare";
   onNavigate?: (href: string) => void;
 }
 
 function NavItem({
   href,
   onNavigate,
-  className,
-  children,
+  active,
+  icon,
+  label,
 }: {
   href: string;
   onNavigate?: (href: string) => void;
-  className: string;
-  children: ReactNode;
+  active: boolean;
+  icon: string;
+  label: string;
 }) {
+  const className = [
+    "flex flex-col items-center justify-center px-4 py-2 rounded-2xl transition-all duration-200 active:scale-90",
+    active
+      ? "bg-primary-container text-on-primary-container"
+      : "text-on-surface-variant hover:bg-secondary-container",
+  ].join(" ");
+
+  const content = (
+    <>
+      <span
+        className="material-symbols-outlined"
+        style={active ? { fontVariationSettings: "'FILL' 1" } : undefined}
+      >
+        {icon}
+      </span>
+      <span className="text-label-lg">{label}</span>
+    </>
+  );
+
   if (onNavigate) {
     return (
       <button type="button" onClick={() => onNavigate(href)} className={className}>
-        {children}
+        {content}
       </button>
     );
   }
-
   return (
     <Link href={href} className={className}>
-      {children}
+      {content}
     </Link>
   );
 }
@@ -58,20 +78,15 @@ export function BottomNavBar({ activeTab, onNavigate }: BottomNavBarProps) {
               <NavItem
                 href="/"
                 onNavigate={onNavigate}
-                className={
-                  activeTab === "apply"
-                    ? "flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-6 py-1 active:scale-90 transition-all duration-200"
-                    : "flex flex-col items-center justify-center text-on-surface-variant hover:bg-secondary-container transition-all p-2 rounded-lg active:scale-90 duration-200"
-                }
-              >
-                <span className="material-symbols-outlined">edit_calendar</span>
-                <span className="text-label-lg">신청하기</span>
-              </NavItem>
+                active={activeTab === "apply"}
+                icon="edit_calendar"
+                label="신청하기"
+              />
             ) : (
               <button
                 type="button"
                 onClick={() => setShowLoginModal(true)}
-                className="flex flex-col items-center justify-center text-on-surface-variant hover:bg-secondary-container transition-all p-2 rounded-lg active:scale-90 duration-200"
+                className="flex flex-col items-center justify-center px-4 py-2 rounded-2xl text-on-surface-variant hover:bg-secondary-container transition-all duration-200 active:scale-90"
               >
                 <span className="material-symbols-outlined">lock</span>
                 <span className="text-label-lg">로그인</span>
@@ -80,20 +95,19 @@ export function BottomNavBar({ activeTab, onNavigate }: BottomNavBarProps) {
             <NavItem
               href="/summary"
               onNavigate={onNavigate}
-              className={
-                activeTab === "status"
-                  ? "flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-6 py-1 active:scale-90 transition-all duration-200"
-                  : "flex flex-col items-center justify-center text-on-surface-variant hover:bg-secondary-container transition-all p-2 rounded-lg active:scale-90 duration-200"
-              }
-            >
-              <span
-                className="material-symbols-outlined"
-                style={activeTab === "status" ? { fontVariationSettings: "'FILL' 1" } : undefined}
-              >
-                analytics
-              </span>
-              <span className="text-label-lg">현황확인</span>
-            </NavItem>
+              active={activeTab === "status"}
+              icon="analytics"
+              label="현황확인"
+            />
+            {isAuthenticated && (
+              <NavItem
+                href="/fare"
+                onNavigate={onNavigate}
+                active={activeTab === "fare"}
+                icon="payments"
+                label="차비"
+              />
+            )}
           </div>
         </div>
       </nav>

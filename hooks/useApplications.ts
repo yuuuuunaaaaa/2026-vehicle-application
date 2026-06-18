@@ -115,6 +115,8 @@ export function useApplications(zone: Zone): UseApplicationsResult {
         setApplications((prev) => {
           const others = prev.filter((a) => a.date !== date);
           const newApps: Application[] = names.map((name) => ({
+            idx: 0,
+            memberIdx: 0,
             zone,
             name,
             date,
