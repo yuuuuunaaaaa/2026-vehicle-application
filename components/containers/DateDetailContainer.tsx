@@ -1,7 +1,6 @@
 "use client";
 
 import { useDateSummary } from "@/hooks/useSummary";
-import { useAuth } from "@/hooks/useAuth";
 import { DateDetail } from "@/components/presentational/DateDetail";
 import { TopAppBar } from "@/components/ui/TopAppBar";
 import { BottomNavBar } from "@/components/ui/BottomNavBar";
@@ -13,7 +12,6 @@ interface DateDetailContainerProps {
 }
 
 export function DateDetailContainer({ date }: DateDetailContainerProps) {
-  const { isAuthenticated: isAdmin } = useAuth();
   const { date: eventDate, summary, isLoading, error } = useDateSummary(date);
 
   const label = eventDate ? DATE_LABELS[eventDate as EventDate] : date;
@@ -24,7 +22,6 @@ export function DateDetailContainer({ date }: DateDetailContainerProps) {
       <TopAppBar title={`${label} 상세 현황`} backHref="/summary" />
 
       <main className="flex-grow pt-20 pb-28 px-container-padding max-w-2xl mx-auto w-full">
-        {/* Summary hero card */}
         <section className="my-stack-gap-md">
           <div className="bg-primary p-6 rounded-xl shadow-lg text-white">
             <div className="flex justify-between items-center mb-4">
@@ -49,7 +46,7 @@ export function DateDetailContainer({ date }: DateDetailContainerProps) {
             불러오는 중...
           </p>
         ) : (
-          <DateDetail summary={summary} isAdmin={isAdmin} />
+          <DateDetail summary={summary} />
         )}
       </main>
 

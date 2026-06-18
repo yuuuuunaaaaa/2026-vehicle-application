@@ -4,7 +4,6 @@ import {
   getAllMembers,
   addMember,
   updateMember,
-  setMemberPaid,
   deleteMember,
 } from "@/services/memberService";
 import { updateApplicationsByMember, deleteApplicationsByMember } from "@/services/applicationService";
@@ -62,23 +61,6 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("[PUT /api/members]", error);
-    return NextResponse.json({ error: "Failed to update member" }, { status: 500 });
-  }
-}
-
-export async function PATCH(request: NextRequest) {
-  if (!(await isAuthenticated())) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-  try {
-    const { id, paid } = await request.json();
-    if (id === undefined) {
-      return NextResponse.json({ error: "id is required" }, { status: 400 });
-    }
-    await setMemberPaid(Number(id), Boolean(paid));
-    return NextResponse.json({ ok: true });
-  } catch (error) {
-    console.error("[PATCH /api/members]", error);
     return NextResponse.json({ error: "Failed to update member" }, { status: 500 });
   }
 }

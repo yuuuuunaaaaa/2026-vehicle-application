@@ -2,7 +2,7 @@ import { readSheet, clearAndWriteRows } from "@/lib/googleSheets";
 import type { Member, Zone } from "@/types/member";
 
 const SHEET = "members";
-const RANGE = `${SHEET}!A:E`;
+const RANGE = `${SHEET}!A:D`;
 
 const MINOR_VALUES = ["Y", "YES", "예", "O", "TRUE", "1", "◯"];
 
@@ -16,14 +16,13 @@ function serializeMembers(members: Member[]): string[][] {
     m.zone,
     m.name,
     m.isMinor ? "Y" : "N",
-    m.paid ? "Y" : "N",
   ]);
 }
 
 export async function getAllMembers(): Promise<Member[]> {
   const rows = await readSheet(RANGE);
   return rows
-    .filter((r) => r[0] && r[2])
+    .filter((r) => r[0] && !isNaN(Number(r[0])) && r[2])
     .map((r) => {
       const rawZone = (r[1] ?? "").trim();
       const zone = rawZone.endsWith("구역") ? rawZone : `${rawZone}구역`;
@@ -32,7 +31,6 @@ export async function getAllMembers(): Promise<Member[]> {
         zone: zone as Zone,
         name: r[2].trim(),
         isMinor: parseFlag(r[3]),
-        paid: parseFlag(r[4]),
       };
     });
 }
@@ -49,7 +47,7 @@ export async function addMember(
 ): Promise<Member> {
   const all = await getAllMembers();
   const newId = all.reduce((max, m) => Math.max(max, m.id), 0) + 1;
-  const newMember: Member = { id: newId, zone, name, isMinor, paid: false };
+  const newMember: Member = { id: newId, zone, name, isMinor };
   await clearAndWriteRows(RANGE, serializeMembers([...all, newMember]));
   return newMember;
 }
@@ -61,12 +59,6 @@ export async function updateMember(
 ): Promise<void> {
   const all = await getAllMembers();
   const updated = all.map((m) => (m.id === id ? { ...m, name, isMinor } : m));
-  await clearAndWriteRows(RANGE, serializeMembers(updated));
-}
-
-export async function setMemberPaid(id: number, paid: boolean): Promise<void> {
-  const all = await getAllMembers();
-  const updated = all.map((m) => (m.id === id ? { ...m, paid } : m));
   await clearAndWriteRows(RANGE, serializeMembers(updated));
 }
 

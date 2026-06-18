@@ -1,5 +1,5 @@
 import { readSheet, clearAndWriteRows } from "@/lib/googleSheets";
-import { getMembersByZone, getAllMembers } from "@/services/memberService";
+import { getMembersByZone } from "@/services/memberService";
 import type {
   Application,
   ApplicationKey,
@@ -137,6 +137,10 @@ export async function deleteApplicationsByMember(
   await clearAndWriteRows(RANGE, serializeApplications(updated));
 }
 
+export async function getAllApplications(): Promise<Application[]> {
+  return fetchAllApplications();
+}
+
 export async function getDateSummary(): Promise<DateSummary[]> {
   const all = await fetchAllApplications();
   return EVENT_DATES.map((date) => ({
@@ -148,60 +152,16 @@ export async function getDateSummary(): Promise<DateSummary[]> {
 export async function getZoneSummaryForDate(
   date: EventDate
 ): Promise<ZoneSummaryForDate[]> {
-  const [apps, allMembers] = await Promise.all([
-    getApplicationsByDate(date),
-    getAllMembers(),
-  ]);
-
-  const paidMap = new Map(
-    allMembers.map((m) => [`${m.zone}:${m.name}`, m.paid])
-  );
-
+  const apps = await getApplicationsByDate(date);
   const zoneMap = new Map<Zone, string[]>();
   for (const app of apps) {
     const existing = zoneMap.get(app.zone) ?? [];
     existing.push(app.name);
     zoneMap.set(app.zone, existing);
   }
-
-  const minorMap = new Map(
-    allMembers.map((m) => [`${m.zone}:${m.name}`, m.isMinor])
-  );
-
   return Array.from(zoneMap.entries()).map(([zone, members]) => ({
     zone,
     count: members.length,
     members,
-    paidMembers: members.filter((name) => paidMap.get(`${zone}:${name}`) === true),
-    minorMembers: members.filter((name) => minorMap.get(`${zone}:${name}`) === true),
   }));
-}
-
-export async function getApplicantCounts(): Promise<{ zone: Zone; name: string; count: number }[]> {
-  const all = await fetchAllApplications();
-  const countMap = new Map<string, { zone: Zone; name: string; count: number }>();
-  for (const app of all) {
-    const key = `${app.zone}:${app.name}`;
-    const existing = countMap.get(key);
-    if (existing) {
-      existing.count++;
-    } else {
-      countMap.set(key, { zone: app.zone, name: app.name, count: 1 });
-    }
-  }
-  return Array.from(countMap.values());
-}
-
-export async function getUniqueApplicants(): Promise<{ zone: Zone; name: string }[]> {
-  const all = await fetchAllApplications();
-  const seen = new Set<string>();
-  const unique: { zone: Zone; name: string }[] = [];
-  for (const app of all) {
-    const key = `${app.zone}:${app.name}`;
-    if (!seen.has(key)) {
-      seen.add(key);
-      unique.push({ zone: app.zone, name: app.name });
-    }
-  }
-  return unique;
 }
