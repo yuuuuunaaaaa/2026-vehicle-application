@@ -1,3 +1,4 @@
+import { readSheet } from "@/lib/googleSheets";
 import { getAllApplications } from "@/services/applicationService";
 import { getAllMembers } from "@/services/memberService";
 import { EVENT_DATES } from "@/types/application";
@@ -5,12 +6,24 @@ import type { EventDate } from "@/types/application";
 import type { Zone } from "@/types/member";
 import type { DateFareSummary, FareSummary, ZoneDateFare } from "@/types/fare";
 
-const FARE_PER_ADULT = parseInt(process.env.FARE_PER_ADULT ?? "10000", 10);
+const FARE_ENV_FALLBACK = parseInt(process.env.FARE_PER_ADULT ?? "10000", 10);
+
+async function getFarePerAdult(): Promise<number> {
+  try {
+    const rows = await readSheet("fare!A1");
+    const raw = rows?.[0]?.[0];
+    const parsed = parseInt(raw, 10);
+    return isNaN(parsed) ? FARE_ENV_FALLBACK : parsed;
+  } catch {
+    return FARE_ENV_FALLBACK;
+  }
+}
 
 export async function getFareSummary(): Promise<FareSummary> {
-  const [allApps, allMembers] = await Promise.all([
+  const [allApps, allMembers, FARE_PER_ADULT] = await Promise.all([
     getAllApplications(),
     getAllMembers(),
+    getFarePerAdult(),
   ]);
 
   const memberByIdx = new Map(allMembers.map((m) => [m.id, m]));
