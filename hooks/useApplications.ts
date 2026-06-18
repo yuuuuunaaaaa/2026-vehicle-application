@@ -15,6 +15,7 @@ interface UseApplicationsResult {
   hasPendingChanges: (date: EventDate) => boolean;
   resetPendingChanges: () => void;
   discardPendingChangesForDate: (date: EventDate) => void;
+  refresh: () => void;
 }
 
 export function useApplications(zone: Zone): UseApplicationsResult {
@@ -23,27 +24,24 @@ export function useApplications(zone: Zone): UseApplicationsResult {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const fetchApplications = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const res = await fetch(`/api/applications?zone=${encodeURIComponent(zone)}`, {
-        credentials: "include",
-      });
-      if (!res.ok) throw new Error("Failed to load applications");
-      const data = await res.json();
-      setApplications(data.applications);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unknown error");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [zone]);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
-    fetchApplications();
-  }, [fetchApplications]);
+    let cancelled = false;
+    setIsLoading(true);
+    setError(null);
+    fetch(`/api/applications?zone=${encodeURIComponent(zone)}`, { credentials: "include" })
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to load applications");
+        return res.json();
+      })
+      .then((data) => { if (!cancelled) setApplications(data.applications); })
+      .catch((err) => { if (!cancelled) setError(err instanceof Error ? err.message : "Unknown error"); })
+      .finally(() => { if (!cancelled) setIsLoading(false); });
+    return () => { cancelled = true; };
+  }, [zone, refreshKey]);
+
+  const refresh = useCallback(() => setRefreshKey((k) => k + 1), []);
 
   const isApplied = useCallback(
     (name: string, date: EventDate) => {
@@ -150,5 +148,6 @@ export function useApplications(zone: Zone): UseApplicationsResult {
     hasPendingChanges,
     resetPendingChanges,
     discardPendingChangesForDate,
+    refresh,
   };
 }

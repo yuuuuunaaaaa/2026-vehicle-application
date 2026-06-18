@@ -6,11 +6,8 @@ import { useFare } from "@/hooks/useFare";
 import { TopAppBar } from "@/components/ui/TopAppBar";
 import { BottomNavBar } from "@/components/ui/BottomNavBar";
 import { DATE_LABELS, DATE_DAY_LABELS } from "@/types/application";
+import { formatWon } from "@/lib/format";
 import type { DateFareSummary } from "@/types/fare";
-
-function formatWon(amount: number) {
-  return amount.toLocaleString("ko-KR") + "원";
-}
 
 function DateFareRow({ summary, farePerAdult }: { summary: DateFareSummary; farePerAdult: number }) {
   const [open, setOpen] = useState(false);

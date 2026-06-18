@@ -17,16 +17,18 @@ export function useMembers(zone: Zone): UseMembersResult {
   const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
+    let cancelled = false;
     setIsLoading(true);
     setError(null);
-    fetch(`/api/members?zone=${encodeURIComponent(zone)}`)
+    fetch(`/api/members?zone=${encodeURIComponent(zone)}`, { credentials: "include" })
       .then((res) => {
         if (!res.ok) throw new Error("Failed to load members");
         return res.json();
       })
-      .then((data) => setMembers(data.members))
-      .catch((err) => setError(err.message))
-      .finally(() => setIsLoading(false));
+      .then((data) => { if (!cancelled) setMembers(data.members); })
+      .catch((err) => { if (!cancelled) setError(err.message); })
+      .finally(() => { if (!cancelled) setIsLoading(false); });
+    return () => { cancelled = true; };
   }, [zone, refreshKey]);
 
   const refresh = useCallback(() => setRefreshKey((k) => k + 1), []);

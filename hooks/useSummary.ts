@@ -15,14 +15,18 @@ export function useSummary(): UseSummaryResult {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("/api/summary")
+    let cancelled = false;
+    setIsLoading(true);
+    setError(null);
+    fetch("/api/summary", { credentials: "include" })
       .then((res) => {
         if (!res.ok) throw new Error("Failed to load summary");
         return res.json();
       })
-      .then((data) => setSummary(data.summary))
-      .catch((err) => setError(err.message))
-      .finally(() => setIsLoading(false));
+      .then((data) => { if (!cancelled) setSummary(data.summary); })
+      .catch((err) => { if (!cancelled) setError(err.message); })
+      .finally(() => { if (!cancelled) setIsLoading(false); });
+    return () => { cancelled = true; };
   }, []);
 
   return { summary, isLoading, error };
@@ -44,14 +48,18 @@ export function useDateSummary(date: string): UseDateSummaryResult {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch(`/api/summary/${encodeURIComponent(date)}`)
+    let cancelled = false;
+    setIsLoading(true);
+    setError(null);
+    fetch(`/api/summary/${encodeURIComponent(date)}`, { credentials: "include" })
       .then((res) => {
         if (!res.ok) throw new Error("Failed to load date summary");
         return res.json();
       })
-      .then((res) => setData({ date: res.date, summary: res.summary }))
-      .catch((err) => setError(err.message))
-      .finally(() => setIsLoading(false));
+      .then((res) => { if (!cancelled) setData({ date: res.date, summary: res.summary }); })
+      .catch((err) => { if (!cancelled) setError(err.message); })
+      .finally(() => { if (!cancelled) setIsLoading(false); });
+    return () => { cancelled = true; };
   }, [date]);
 
   return { ...data, isLoading, error };

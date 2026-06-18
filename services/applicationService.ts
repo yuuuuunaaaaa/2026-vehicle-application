@@ -1,5 +1,6 @@
 import { readSheet, clearAndWriteRows } from "@/lib/googleSheets";
 import { getMembersByZone } from "@/services/memberService";
+import { compareZones } from "@/lib/zoneSort";
 import type {
   Application,
   ApplicationKey,
@@ -160,14 +161,7 @@ export async function getZoneSummaryForDate(
     zoneMap.set(app.zone, existing);
   }
   return Array.from(zoneMap.entries())
-    .sort(([a], [b]) => {
-      const ai = parseInt(a);
-      const bi = parseInt(b);
-      if (isNaN(ai) && isNaN(bi)) return a.localeCompare(b);
-      if (isNaN(ai)) return 1;
-      if (isNaN(bi)) return -1;
-      return ai - bi;
-    })
+    .sort(([a], [b]) => compareZones(a, b))
     .map(([zone, members]) => ({
       zone,
       count: members.length,

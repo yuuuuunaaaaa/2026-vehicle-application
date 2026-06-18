@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import type { Zone } from "@/types/member";
 import type { EventDate } from "@/types/application";
@@ -46,6 +46,7 @@ export function ZoneApplicationContainer({ zone }: ZoneApplicationContainerProps
     hasPendingChanges,
     resetPendingChanges,
     discardPendingChangesForDate,
+    refresh: refreshApplications,
   } = useApplications(zone);
 
   useEffect(() => {
@@ -54,13 +55,11 @@ export function ZoneApplicationContainer({ zone }: ZoneApplicationContainerProps
     }
   }, [isAuthenticated, authLoading, resetPendingChanges]);
 
-  const prevShowMemberManager = useRef(false);
-  useEffect(() => {
-    if (prevShowMemberManager.current && !showMemberManager) {
-      refreshMembers();
-    }
-    prevShowMemberManager.current = showMemberManager;
-  }, [showMemberManager, refreshMembers]);
+  const closeMemberManager = useCallback(() => {
+    setShowMemberManager(false);
+    refreshMembers();
+    refreshApplications();
+  }, [refreshMembers, refreshApplications]);
 
   const isDirty = hasPendingChanges(selectedDate);
   const canEdit = isAuthenticated && !authLoading;
@@ -73,14 +72,14 @@ export function ZoneApplicationContainer({ zone }: ZoneApplicationContainerProps
       discardPendingChangesForDate(selectedDate);
       if (action.type === "date") {
         setSelectedDate(action.date);
-        setShowMemberManager(false);
+        closeMemberManager();
       } else if (action.type === "navigate") {
         router.push(action.href);
       } else if (action.type === "member-manager") {
         setShowMemberManager(true);
       }
     },
-    [discardPendingChangesForDate, router, selectedDate]
+    [closeMemberManager, discardPendingChangesForDate, router, selectedDate]
   );
 
   const attemptLeave = useCallback(
@@ -102,7 +101,7 @@ export function ZoneApplicationContainer({ zone }: ZoneApplicationContainerProps
 
   const handleMemberManagerToggle = () => {
     if (showMemberManager) {
-      setShowMemberManager(false);
+      closeMemberManager();
       return;
     }
     attemptLeave({ type: "member-manager" });
@@ -156,7 +155,7 @@ export function ZoneApplicationContainer({ zone }: ZoneApplicationContainerProps
         titleColor="on-surface"
       />
 
-      <main className="flex-grow pt-20 pb-32 px-container-padding space-y-6 max-w-2xl mx-auto w-full">
+      <main className={`flex-grow pt-20 px-container-padding space-y-6 max-w-2xl mx-auto w-full ${canEdit && !showMemberManager ? "pb-52" : "pb-28"}`}>
         <DateSelector
           selectedDate={showMemberManager ? null : selectedDate}
           onSelect={handleDateSelect}
