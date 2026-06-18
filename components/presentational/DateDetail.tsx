@@ -63,8 +63,8 @@ export function DateDetail({ summary }: DateDetailProps) {
                       </span>
                       <span className="text-body-lg text-on-surface">{name}</span>
                       {isMinor && (
-                        <span className="ml-auto text-label-sm text-on-tertiary bg-tertiary px-2 py-0.5 rounded-full">
-                          미성년자
+                        <span className="ml-auto shrink-0 text-[11px] font-bold px-2 py-1 rounded-full bg-primary text-on-primary">
+                          미성년
                         </span>
                       )}
                     </div>
