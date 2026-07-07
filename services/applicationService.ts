@@ -5,6 +5,7 @@ import type {
   Application,
   ApplicationKey,
   DateSummary,
+  Direction,
   EventDate,
   ZoneMemberSummary,
   ZoneSummaryForDate,
@@ -13,7 +14,7 @@ import { EVENT_DATES } from "@/types/application";
 import type { Zone } from "@/types/member";
 
 const SHEET = "applications";
-const RANGE = `${SHEET}!A:F`;
+const RANGE = `${SHEET}!A:G`;
 
 async function fetchAllApplications(): Promise<Application[]> {
   const rows = await readSheet(RANGE);
@@ -26,6 +27,7 @@ async function fetchAllApplications(): Promise<Application[]> {
       name: r[3],
       date: r[4] as EventDate,
       updated_at: r[5] ?? "",
+      direction: (r[6] as Direction) || "both",
     }));
 }
 
@@ -37,6 +39,7 @@ function serializeApplications(apps: Application[]): string[][] {
     a.name,
     a.date,
     a.updated_at,
+    a.direction,
   ]);
 }
 
@@ -85,6 +88,7 @@ export async function toggleApplication(key: ApplicationKey): Promise<{
       name: key.name,
       date: key.date,
       updated_at: new Date().toISOString(),
+      direction: "both",
     };
     updated = [...all, newApp];
     action = "added";
@@ -97,7 +101,7 @@ export async function toggleApplication(key: ApplicationKey): Promise<{
 export async function setApplicationsForZoneDate(
   zone: Zone,
   date: EventDate,
-  names: string[]
+  entries: { name: string; direction: Direction }[]
 ): Promise<void> {
   const [all, zoneMembers] = await Promise.all([
     fetchAllApplications(),
@@ -108,13 +112,14 @@ export async function setApplicationsForZoneDate(
   const others = all.filter((a) => !(a.zone === zone && a.date === date));
   let idxCounter = nextIdx(others);
 
-  const newApps: Application[] = names.map((name) => ({
+  const newApps: Application[] = entries.map(({ name, direction }) => ({
     idx: idxCounter++,
     memberIdx: memberIdxMap.get(name) ?? 0,
     zone,
     name,
     date,
     updated_at: new Date().toISOString(),
+    direction,
   }));
 
   await clearAndWriteRows(RANGE, serializeApplications([...others, ...newApps]));
@@ -169,6 +174,7 @@ export async function getZoneSummaryForDate(
     existing.push({
       name: app.name,
       isMinor: minorLookup.get(`${app.zone}::${app.name}`) ?? false,
+      direction: app.direction,
     });
     zoneMap.set(app.zone, existing);
   }
