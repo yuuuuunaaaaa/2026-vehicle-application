@@ -5,6 +5,8 @@ export interface ZoneDateFare {
   zone: Zone;
   adultCount: number;
   minorCount: number;
+  roundTripAdultCount: number;
+  oneWayAdultCount: number;
   fare: number;
 }
 
@@ -14,10 +16,13 @@ export interface DateFareSummary {
   totalFare: number;
   totalAdults: number;
   totalMinors: number;
+  totalRoundTripAdults: number;
+  totalOneWayAdults: number;
 }
 
 export interface FareSummary {
   farePerAdult: number;
+  farePerAdultOneWay: number;
   dates: DateFareSummary[];
   grandTotal: number;
 }

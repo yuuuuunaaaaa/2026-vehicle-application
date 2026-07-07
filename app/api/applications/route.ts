@@ -6,7 +6,7 @@ import {
 } from "@/services/applicationService";
 import { isAuthenticated } from "@/lib/auth";
 import type { Zone } from "@/types/member";
-import type { EventDate } from "@/types/application";
+import type { Direction, EventDate } from "@/types/application";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
@@ -66,20 +66,20 @@ export async function PUT(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { zone, date, names } = body as {
+    const { zone, date, entries } = body as {
       zone: Zone;
       date: EventDate;
-      names: string[];
+      entries: { name: string; direction: Direction }[];
     };
 
-    if (!zone || !date || !Array.isArray(names)) {
+    if (!zone || !date || !Array.isArray(entries)) {
       return NextResponse.json(
-        { error: "zone, date, names are required" },
+        { error: "zone, date, entries are required" },
         { status: 400 }
       );
     }
 
-    await setApplicationsForZoneDate(zone, date, names);
+    await setApplicationsForZoneDate(zone, date, entries);
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("[PUT /api/applications]", error);

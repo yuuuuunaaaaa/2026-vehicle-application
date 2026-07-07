@@ -46,7 +46,7 @@ export function DateDetailContainer({ date }: DateDetailContainerProps) {
             불러오는 중...
           </p>
         ) : (
-          <DateDetail summary={summary} />
+          <DateDetail date={date} summary={summary} />
         )}
       </main>
 

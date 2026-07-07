@@ -1,15 +1,20 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import type { Application, EventDate } from "@/types/application";
+import type { Application, Direction, EventDate } from "@/types/application";
+import { NEXT_DIRECTION } from "@/types/application";
 import type { Zone } from "@/types/member";
+
+type Override = Direction | "removed";
 
 interface UseApplicationsResult {
   applications: Application[];
   isLoading: boolean;
   error: string | null;
   isApplied: (name: string, date: EventDate) => boolean;
+  getDirection: (name: string, date: EventDate) => Direction | null;
   pendingToggle: (name: string, date: EventDate) => void;
+  cycleDirection: (name: string, date: EventDate) => void;
   save: (date: EventDate) => Promise<void>;
   isSaving: boolean;
   hasPendingChanges: (date: EventDate) => boolean;
@@ -20,7 +25,7 @@ interface UseApplicationsResult {
 
 export function useApplications(zone: Zone): UseApplicationsResult {
   const [applications, setApplications] = useState<Application[]>([]);
-  const [pendingChanges, setPendingChanges] = useState<Record<string, Set<string>>>({});
+  const [pendingChanges, setPendingChanges] = useState<Record<string, Map<string, Override>>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -43,26 +48,65 @@ export function useApplications(zone: Zone): UseApplicationsResult {
 
   const refresh = useCallback(() => setRefreshKey((k) => k + 1), []);
 
-  const isApplied = useCallback(
-    (name: string, date: EventDate) => {
-      const serverApplied = applications.some((a) => a.name === name && a.date === date);
-      const isPending = pendingChanges[date]?.has(name) ?? false;
-      return serverApplied !== isPending;
+  const serverDirection = useCallback(
+    (name: string, date: EventDate): Direction | null => {
+      const app = applications.find((a) => a.name === name && a.date === date);
+      return app ? app.direction : null;
     },
-    [applications, pendingChanges]
+    [applications]
   );
 
-  const pendingToggle = useCallback((name: string, date: EventDate) => {
-    setPendingChanges((prev) => {
-      const existing = new Set(prev[date] ?? []);
-      if (existing.has(name)) {
-        existing.delete(name);
-      } else {
-        existing.add(name);
-      }
-      return { ...prev, [date]: existing };
-    });
-  }, []);
+  const getDirection = useCallback(
+    (name: string, date: EventDate): Direction | null => {
+      const override = pendingChanges[date]?.get(name);
+      if (override === "removed") return null;
+      if (override) return override;
+      return serverDirection(name, date);
+    },
+    [pendingChanges, serverDirection]
+  );
+
+  const isApplied = useCallback(
+    (name: string, date: EventDate) => getDirection(name, date) !== null,
+    [getDirection]
+  );
+
+  const applyOverride = useCallback(
+    (date: EventDate, name: string, next: Direction | null) => {
+      setPendingChanges((prev) => {
+        const dateMap = new Map(prev[date] ?? []);
+        if (next === serverDirection(name, date)) {
+          dateMap.delete(name);
+        } else {
+          dateMap.set(name, next === null ? "removed" : next);
+        }
+        if (dateMap.size === 0) {
+          const rest = { ...prev };
+          delete rest[date];
+          return rest;
+        }
+        return { ...prev, [date]: dateMap };
+      });
+    },
+    [serverDirection]
+  );
+
+  const pendingToggle = useCallback(
+    (name: string, date: EventDate) => {
+      const current = getDirection(name, date);
+      applyOverride(date, name, current === null ? "both" : null);
+    },
+    [getDirection, applyOverride]
+  );
+
+  const cycleDirection = useCallback(
+    (name: string, date: EventDate) => {
+      const current = getDirection(name, date);
+      if (current === null) return;
+      applyOverride(date, name, NEXT_DIRECTION[current]);
+    },
+    [getDirection, applyOverride]
+  );
 
   const hasPendingChanges = useCallback(
     (date: EventDate) => (pendingChanges[date]?.size ?? 0) > 0,
@@ -87,23 +131,26 @@ export function useApplications(zone: Zone): UseApplicationsResult {
       setIsSaving(true);
       setError(null);
       try {
-        const serverSet = new Set(
-          applications.filter((a) => a.date === date).map((a) => a.name)
+        const finalMap = new Map<string, Direction>(
+          applications.filter((a) => a.date === date).map((a) => [a.name, a.direction])
         );
-        for (const name of pendingChanges[date] ?? []) {
-          if (serverSet.has(name)) {
-            serverSet.delete(name);
+        for (const [name, value] of pendingChanges[date] ?? []) {
+          if (value === "removed") {
+            finalMap.delete(name);
           } else {
-            serverSet.add(name);
+            finalMap.set(name, value);
           }
         }
-        const names = Array.from(serverSet);
+        const entries = Array.from(finalMap.entries()).map(([name, direction]) => ({
+          name,
+          direction,
+        }));
 
         const res = await fetch("/api/applications", {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
-          body: JSON.stringify({ zone, date, names }),
+          body: JSON.stringify({ zone, date, entries }),
         });
         if (!res.ok) {
           if (res.status === 401) throw new Error("저장 권한이 없습니다. 관리자 로그인이 필요합니다.");
@@ -112,12 +159,13 @@ export function useApplications(zone: Zone): UseApplicationsResult {
 
         setApplications((prev) => {
           const others = prev.filter((a) => a.date !== date);
-          const newApps: Application[] = names.map((name) => ({
+          const newApps: Application[] = entries.map(({ name, direction }) => ({
             idx: 0,
             memberIdx: 0,
             zone,
             name,
             date,
+            direction,
             updated_at: new Date().toISOString(),
           }));
           return [...others, ...newApps];
@@ -142,7 +190,9 @@ export function useApplications(zone: Zone): UseApplicationsResult {
     isLoading,
     error,
     isApplied,
+    getDirection,
     pendingToggle,
+    cycleDirection,
     save,
     isSaving,
     hasPendingChanges,

@@ -20,7 +20,7 @@ function DateFareRow({ summary, farePerAdult }: { summary: DateFareSummary; fare
     <div className={`border rounded-xl overflow-hidden transition-all duration-200 ${open ? "border-primary ring-2 ring-primary" : "border-outline-variant"}`}>
       <button
         type="button"
-        className="w-full flex items-center justify-between px-4 py-4 hover:bg-surface-container-low transition-colors"
+        className="w-full flex items-start justify-between px-4 py-4 hover:bg-surface-container-low transition-colors"
         onClick={() => setOpen((v) => !v)}
       >
         <div className="flex items-center gap-3 min-w-0">
@@ -35,6 +35,7 @@ function DateFareRow({ summary, farePerAdult }: { summary: DateFareSummary; fare
             </p>
             <p className="text-body-sm text-on-surface-variant whitespace-nowrap">
               성인 {summary.totalAdults}명
+              {summary.totalOneWayAdults > 0 && ` (편도 ${summary.totalOneWayAdults}명)`}
               {summary.totalMinors > 0 && ` · 미성년 ${summary.totalMinors}명`}
             </p>
           </div>
@@ -69,7 +70,14 @@ function DateFareRow({ summary, farePerAdult }: { summary: DateFareSummary; fare
               style={tableCols}
             >
               <span className="font-bold text-on-surface">{z.zone}</span>
-              <span className="text-center text-on-surface whitespace-nowrap">{z.adultCount}명</span>
+              <span className="text-center text-on-surface whitespace-nowrap">
+                {z.adultCount}명
+                {z.oneWayAdultCount > 0 && (
+                  <span className="block text-[11px] text-on-surface-variant font-normal">
+                    편도 {z.oneWayAdultCount}
+                  </span>
+                )}
+              </span>
               <span className="text-center text-on-surface-variant whitespace-nowrap">
                 {z.minorCount > 0 ? `${z.minorCount}명` : "—"}
               </span>
@@ -130,7 +138,9 @@ export function FareContainer() {
                 <div className="bg-primary rounded-xl p-5 mb-6 text-white">
                   <p className="text-label-lg opacity-80 mb-1">전체 차비 합계</p>
                   <p className="text-4xl font-bold mb-3">{formatWon(fare.grandTotal)}</p>
-                  <p className="text-body-sm opacity-70">1인 1회 {formatWon(fare.farePerAdult)}</p>
+                  <p className="text-body-sm opacity-70">
+                    왕복 {formatWon(fare.farePerAdult)} · 편도 {formatWon(fare.farePerAdultOneWay)}
+                  </p>
                 </div>
 
                 {/* 날짜별 아코디언 */}

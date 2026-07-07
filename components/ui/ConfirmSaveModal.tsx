@@ -1,9 +1,17 @@
 "use client";
 
+import type { Direction } from "@/types/application";
+import { DIRECTION_BADGE_STYLES, DIRECTION_LABELS } from "@/types/application";
+
+interface Applicant {
+  name: string;
+  direction: Direction;
+}
+
 interface ConfirmSaveModalProps {
   isOpen: boolean;
   dateLabel: string;
-  appliedNames: string[];
+  applicants: Applicant[];
   onConfirm: () => void;
   onCancel: () => void;
   isLoading: boolean;
@@ -12,7 +20,7 @@ interface ConfirmSaveModalProps {
 export function ConfirmSaveModal({
   isOpen,
   dateLabel,
-  appliedNames,
+  applicants,
   onConfirm,
   onCancel,
   isLoading,
@@ -48,12 +56,12 @@ export function ConfirmSaveModal({
                 groups
               </span>
               <span className="text-label-lg text-on-surface">
-                신청 인원 {appliedNames.length}명
+                신청 인원 {applicants.length}명
               </span>
             </div>
-            {appliedNames.length > 0 ? (
+            {applicants.length > 0 ? (
               <div className="max-h-52 overflow-y-auto space-y-1">
-                {appliedNames.map((name) => (
+                {applicants.map(({ name, direction }) => (
                   <div key={name} className="flex items-center gap-2 py-1">
                     <span
                       className="material-symbols-outlined text-primary shrink-0"
@@ -61,7 +69,10 @@ export function ConfirmSaveModal({
                     >
                       check_circle
                     </span>
-                    <span className="text-body-md text-on-surface">{name}</span>
+                    <span className="text-body-md text-on-surface flex-1">{name}</span>
+                    <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full shrink-0 ${DIRECTION_BADGE_STYLES[direction]}`}>
+                      {DIRECTION_LABELS[direction]}
+                    </span>
                   </div>
                 ))}
               </div>

@@ -35,6 +35,26 @@ export const DATE_DAY_LABELS: Record<EventDate, string> = {
   "2026-07-30": "(목)",
 };
 
+export type Direction = "both" | "outbound" | "return";
+
+export const DIRECTION_LABELS: Record<Direction, string> = {
+  both: "왕복",
+  outbound: "갈때만",
+  return: "올때만",
+};
+
+export const NEXT_DIRECTION: Record<Direction, Direction> = {
+  both: "outbound",
+  outbound: "return",
+  return: "both",
+};
+
+export const DIRECTION_BADGE_STYLES: Record<Direction, string> = {
+  both: "bg-surface-container-high text-on-surface-variant",
+  outbound: "bg-warning text-on-warning",
+  return: "bg-tertiary text-on-tertiary",
+};
+
 export interface Application {
   idx: number;
   memberIdx: number;
@@ -42,6 +62,7 @@ export interface Application {
   name: string;
   date: EventDate;
   updated_at: string;
+  direction: Direction;
 }
 
 export interface ApplicationKey {
@@ -59,6 +80,7 @@ export interface DateSummary {
 export interface ZoneMemberSummary {
   name: string;
   isMinor: boolean;
+  direction: Direction;
 }
 
 export interface ZoneSummaryForDate {

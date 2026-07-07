@@ -39,8 +39,9 @@ export function ZoneApplicationContainer({ zone }: ZoneApplicationContainerProps
   const {
     isLoading: appsLoading,
     error: appsError,
-    isApplied,
+    getDirection,
     pendingToggle,
+    cycleDirection,
     save,
     isSaving,
     hasPendingChanges,
@@ -63,8 +64,10 @@ export function ZoneApplicationContainer({ zone }: ZoneApplicationContainerProps
 
   const isDirty = hasPendingChanges(selectedDate);
   const canEdit = isAuthenticated && !authLoading;
-  const appliedNames = members.filter((m) => isApplied(m.name, selectedDate)).map((m) => m.name);
-  const appliedCount = appliedNames.length;
+  const applicants = members
+    .map((m) => ({ name: m.name, direction: getDirection(m.name, selectedDate) }))
+    .filter((a): a is { name: string; direction: NonNullable<typeof a.direction> } => a.direction !== null);
+  const appliedCount = applicants.length;
   const dateLabel = `${DATE_LABELS[selectedDate]} ${DATE_DAY_LABELS[selectedDate]}`;
 
   const executeLeaveAction = useCallback(
@@ -206,8 +209,9 @@ export function ZoneApplicationContainer({ zone }: ZoneApplicationContainerProps
               <MemberList
                 members={members}
                 selectedDate={selectedDate}
-                isApplied={isApplied}
+                getDirection={getDirection}
                 onToggle={pendingToggle}
+                onCycleDirection={cycleDirection}
                 disabled={isSaving}
                 readOnly={!canEdit}
               />
@@ -246,7 +250,7 @@ export function ZoneApplicationContainer({ zone }: ZoneApplicationContainerProps
         <ConfirmSaveModal
           isOpen={showSaveModal}
           dateLabel={dateLabel}
-          appliedNames={appliedNames}
+          applicants={applicants}
           onConfirm={handleConfirm}
           onCancel={() => setShowSaveModal(false)}
           isLoading={isSaving}
