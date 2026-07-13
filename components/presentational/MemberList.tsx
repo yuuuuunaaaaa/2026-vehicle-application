@@ -24,6 +24,9 @@ export function MemberList({
   readOnly = false,
 }: MemberListProps) {
   const interactive = !disabled && !readOnly;
+  const sortedMembers = [...members].sort((a, b) =>
+    a.name.localeCompare(b.name, "ko"),
+  );
 
   return (
     <>
@@ -36,7 +39,7 @@ export function MemberList({
           : "성명을 눌러 신청 여부를 변경하고, 오른쪽 배지를 눌러 왕복/갈때만/올때만을 변경하세요"}
       </p>
       <div className="grid gap-2 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
-        {members.map((member) => {
+        {sortedMembers.map((member) => {
           const direction = getDirection(member.name, selectedDate);
           const applied = direction !== null;
 
