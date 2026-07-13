@@ -61,6 +61,10 @@ export function ZoneMemberPanel({ zone }: ZoneMemberPanelProps) {
     handleSave, handleDelete,
   } = useZoneMemberCrud(zone);
 
+  const sortedMembers = [...members].sort((a, b) =>
+    a.name.localeCompare(b.name, "ko"),
+  );
+
   return (
     <>
       <div className="flex items-center justify-between mb-1">
@@ -87,7 +91,7 @@ export function ZoneMemberPanel({ zone }: ZoneMemberPanelProps) {
             <span className="material-symbols-outlined" style={{ fontSize: 22 }}>add</span>
             <span className="text-body-md font-bold">구성원 추가</span>
           </button>
-          {members.map((m) => (
+          {sortedMembers.map((m) => (
             <MemberRow
               key={m.id}
               member={m}
