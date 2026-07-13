@@ -92,7 +92,7 @@ export function DateDetail({ date, summary }: DateDetailProps) {
       {checkMode ? (
         <div className="space-y-3">
           {legMembers.length > 0 ? (
-            legMembers.map(({ zone, name, isMinor, direction }) => {
+            legMembers.map(({ zone, name, isMinor }) => {
               const key = `${zone}::${name}`;
               const isChecked = checked.has(key);
               return (
@@ -121,11 +121,6 @@ export function DateDetail({ date, summary }: DateDetailProps) {
                   <span className={`text-body-lg text-on-surface ${isChecked ? "font-bold" : ""}`}>{name}</span>
                   <span className="text-[11px] text-on-surface-variant shrink-0">{zone}</span>
                   <div className="ml-auto shrink-0 flex items-center gap-1.5">
-                    {direction !== "both" && (
-                      <span className={`text-[11px] font-bold px-2 py-1 rounded-full ${DIRECTION_BADGE_STYLES[direction]}`}>
-                        {DIRECTION_LABELS[direction]}
-                      </span>
-                    )}
                     {isMinor && (
                       <span className="text-[11px] font-bold px-2 py-1 rounded-full bg-primary text-on-primary">
                         미성년
