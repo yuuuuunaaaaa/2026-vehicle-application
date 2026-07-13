@@ -78,15 +78,6 @@ export function ZoneMemberPanel({ zone }: ZoneMemberPanelProps) {
         </p>
       ) : (
         <div className="flex flex-col gap-2">
-          {members.map((m) => (
-            <MemberRow
-              key={m.id}
-              member={m}
-              onEdit={() => openEdit(m)}
-              onDelete={() => setDeleteTarget(m)}
-              disabled={isProcessing}
-            />
-          ))}
           <button
             type="button"
             onClick={openAdd}
@@ -96,6 +87,15 @@ export function ZoneMemberPanel({ zone }: ZoneMemberPanelProps) {
             <span className="material-symbols-outlined" style={{ fontSize: 22 }}>add</span>
             <span className="text-body-md font-bold">구성원 추가</span>
           </button>
+          {members.map((m) => (
+            <MemberRow
+              key={m.id}
+              member={m}
+              onEdit={() => openEdit(m)}
+              onDelete={() => setDeleteTarget(m)}
+              disabled={isProcessing}
+            />
+          ))}
         </div>
       )}
 
