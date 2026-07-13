@@ -16,6 +16,12 @@ export function DateDetailContainer({ date }: DateDetailContainerProps) {
 
   const label = eventDate ? DATE_LABELS[eventDate as EventDate] : date;
   const totalCount = summary.reduce((sum, z) => sum + z.count, 0);
+  const sortedSummary = summary.map((zone) => ({
+    ...zone,
+    members: [...zone.members].sort((a, b) =>
+      a.name.localeCompare(b.name, "ko"),
+    ),
+  }));
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
@@ -46,7 +52,7 @@ export function DateDetailContainer({ date }: DateDetailContainerProps) {
             불러오는 중...
           </p>
         ) : (
-          <DateDetail date={date} summary={summary} />
+          <DateDetail date={date} summary={sortedSummary} />
         )}
       </main>
 
