@@ -75,6 +75,8 @@ export interface ApplicationKey {
 export interface DateSummary {
   date: EventDate;
   count: number;
+  outboundCount: number;
+  returnCount: number;
 }
 
 export interface ZoneMemberSummary {

@@ -11,7 +11,7 @@ export interface SummaryTableProps {
 export function SummaryTable({ summary }: SummaryTableProps) {
   return (
     <div className="flex flex-col gap-stack-gap-sm">
-      {summary.map(({ date, count }) => (
+      {summary.map(({ date, count, outboundCount, returnCount }) => (
         <Link
           key={date}
           href={`/summary/${date}`}
@@ -21,10 +21,15 @@ export function SummaryTable({ summary }: SummaryTableProps) {
             <span className="text-body-lg text-on-surface">
               {DATE_LABELS[date]} {DATE_DAY_LABELS[date]}
             </span>
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-primary" />
+            <div className="flex items-center gap-2 whitespace-nowrap">
+              <span className="w-2 h-2 rounded-full bg-primary shrink-0" />
               <span className="text-label-lg text-on-surface-variant">
                 총 신청자 <span className="text-primary">{count}명</span>
+              </span>
+              <span className="text-[13px] text-on-surface-variant">
+                (갈 때 <span className="text-primary">{outboundCount}</span>
+                <span className="text-outline mx-0.5">·</span>
+                올 때 <span className="text-primary">{returnCount}</span>)
               </span>
             </div>
           </div>
