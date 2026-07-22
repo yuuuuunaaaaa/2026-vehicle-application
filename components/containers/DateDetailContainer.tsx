@@ -15,7 +15,10 @@ export function DateDetailContainer({ date }: DateDetailContainerProps) {
   const { date: eventDate, summary, isLoading, error } = useDateSummary(date);
 
   const label = eventDate ? DATE_LABELS[eventDate as EventDate] : date;
-  const totalCount = summary.reduce((sum, z) => sum + z.count, 0);
+  const members = summary.flatMap((z) => z.members);
+  const totalCount = members.length;
+  const outboundCount = members.filter((m) => m.direction !== "return").length;
+  const returnCount = members.filter((m) => m.direction !== "outbound").length;
   const sortedSummary = summary.map((zone) => ({
     ...zone,
     members: [...zone.members].sort((a, b) =>
@@ -33,11 +36,18 @@ export function DateDetailContainer({ date }: DateDetailContainerProps) {
             <div className="flex justify-between items-center mb-4">
               <span className="text-label-lg opacity-80">전체 신청 인원</span>
             </div>
-            <div className="flex items-baseline gap-1">
-              <span className="text-4xl font-bold">
-                {isLoading ? "—" : totalCount}
-              </span>
-              <span className="text-xl opacity-90">명</span>
+            <div className="flex items-baseline gap-2">
+              <div className="flex items-baseline gap-1">
+                <span className="text-4xl font-bold">
+                  {isLoading ? "—" : totalCount}
+                </span>
+                <span className="text-xl opacity-90">명</span>
+              </div>
+              {!isLoading && (
+                <span className="text-sm opacity-80">
+                  (갈 때 {outboundCount} · 올 때 {returnCount})
+                </span>
+              )}
             </div>
           </div>
         </section>

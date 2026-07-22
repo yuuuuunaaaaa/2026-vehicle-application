@@ -1,0 +1,12 @@
+# Git 커밋 메시지 (Generate Commit Message 포함)
+
+이 저장소의 Git 커밋 메시지는 반드시 한글로 작성한다.
+
+형식: `<유형>: <변경 요약>`
+- 유형: fix, feat, refactor, docs, chore, test
+- 1~2문장, 변경 이유(why) 중심
+- 영문 커밋 메시지 사용 금지
+
+예시:
+- fix: 불량 등록 시 주/야 구분을 WORK_SHIFT name으로 저장
+- feat: barcode_pop 불량 등록 화면에 로트 선택 추가

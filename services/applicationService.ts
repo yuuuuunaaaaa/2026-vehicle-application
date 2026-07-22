@@ -150,10 +150,15 @@ export async function getAllApplications(): Promise<Application[]> {
 
 export async function getDateSummary(): Promise<DateSummary[]> {
   const all = await fetchAllApplications();
-  return EVENT_DATES.map((date) => ({
-    date,
-    count: all.filter((a) => a.date === date).length,
-  }));
+  return EVENT_DATES.map((date) => {
+    const apps = all.filter((a) => a.date === date);
+    return {
+      date,
+      count: apps.length,
+      outboundCount: apps.filter((a) => a.direction !== "return").length,
+      returnCount: apps.filter((a) => a.direction !== "outbound").length,
+    };
+  });
 }
 
 export async function getZoneSummaryForDate(
